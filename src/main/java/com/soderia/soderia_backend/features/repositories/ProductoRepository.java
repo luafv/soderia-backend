@@ -12,4 +12,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     Optional<Producto> findByNombreIgnoreCase(String nombre);
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    // Para validar nombre repetido al actualizar, sin contar al propio producto
+    boolean existsByNombreIgnoreCaseAndIdProductoNot(String nombre, Long idProducto);
 }
