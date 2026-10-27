@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -20,6 +21,6 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
             WHERE p.cliente.idCliente = :idCliente
               AND p.producto.idProducto = :idProducto
             """)
-    Long sumarCantidadPagada(@Param("idCliente") Long idCliente,
-                             @Param("idProducto") Long idProducto);
+    BigDecimal sumarCantidadPagada(@Param("idCliente") Long idCliente,
+                                   @Param("idProducto") Long idProducto);
 }
