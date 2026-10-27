@@ -7,6 +7,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -39,6 +40,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> manejarJsonInvalido(HttpMessageNotReadableException ex) {
         return construir(HttpStatus.BAD_REQUEST, "El cuerpo de la solicitud no es válido", null);
+    }
+
+    // Parámetro de la URL con tipo incorrecto (ej: /api/productos/abc o /api/clientes/dia/LUNES)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> manejarTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        String mensaje = "El valor '" + ex.getValue() + "' no es válido para '" + ex.getName() + "'";
+        Class<?> tipo = ex.getRequiredType();
+        if (tipo != null && tipo.isEnum()) {
+            mensaje += ". Valores posibles: " + java.util.Arrays.toString(tipo.getEnumConstants());
+        }
+        return construir(HttpStatus.BAD_REQUEST, mensaje, null);
     }
 
     // Ej: borrar un producto que ya se usó en pedidos

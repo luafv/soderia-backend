@@ -15,4 +15,7 @@ public interface DetalleProductoClienteRepository extends JpaRepository<DetalleP
     Optional<DetalleProductoCliente> findByClienteIdClienteAndProductoIdProducto(Long idCliente, Long idProducto);
 
     boolean existsByClienteIdClienteAndProductoIdProducto(Long idCliente, Long idProducto);
+
+    // Borra los productos fijos de un cliente (se usa antes de borrar al cliente)
+    void deleteByClienteIdCliente(Long idCliente);
 }
