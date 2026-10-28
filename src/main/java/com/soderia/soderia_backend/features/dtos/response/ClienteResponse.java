@@ -8,6 +8,9 @@ public record ClienteResponse(
         String apellido,
         String direccion,
         String email,
-        DayOfWeek diaEntrega
+        String telefono,
+        DayOfWeek diaEntrega,
+        Integer sifonesEnCasa,
+        Boolean activo
 ) {
 }

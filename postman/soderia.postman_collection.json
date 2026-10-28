@@ -762,7 +762,7 @@
       "name": "2 - Clientes",
       "item": [
         {
-          "name": "C01 Crear cliente Juan",
+          "name": "C01 Crear cliente Juan (con teléfono y 3 sifones en casa)",
           "request": {
             "method": "POST",
             "header": [
@@ -783,7 +783,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Gómez{{sufijo}}\",\n  \"direccion\": \"San Martín 123\",\n  \"email\": \"juan@mail.com\",\n  \"diaEntrega\": \"TUESDAY\"\n}",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Gómez{{sufijo}}\",\n  \"direccion\": \"San Martín 123\",\n  \"email\": \"juan@mail.com\",\n  \"telefono\": \"+54 9 11 5555-1234\",\n  \"diaEntrega\": \"TUESDAY\",\n  \"sifonesEnCasa\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -800,14 +800,14 @@
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "pm.collectionVariables.set(\"idCliente1\", j.idCliente);",
-                  "pm.test(\"Día de entrega\", () => pm.expect(j.diaEntrega).to.eql(\"TUESDAY\"));"
+                  "pm.test(\"Datos nuevos (HU-02)\", () => { pm.expect(j.diaEntrega).to.eql(\"TUESDAY\"); pm.expect(j.telefono).to.eql(\"+54 9 11 5555-1234\"); pm.expect(j.sifonesEnCasa).to.eql(3); pm.expect(j.activo).to.eql(true); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "C02 Crear cliente Ana sin email",
+          "name": "C02 Crear cliente Ana sin email ni sifones",
           "request": {
             "method": "POST",
             "header": [
@@ -845,7 +845,7 @@
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "pm.collectionVariables.set(\"idCliente2\", j.idCliente);",
-                  "pm.test(\"Email null\", () => pm.expect(j.email).to.be.null);"
+                  "pm.test(\"Email null y 0 sifones\", () => { pm.expect(j.email).to.be.null; pm.expect(j.sifonesEnCasa).to.eql(0); });"
                 ]
               }
             }
@@ -902,6 +902,43 @@
                 {
                   "key": "buscar",
                   "value": "gómez{{sufijo}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const ids = j.map(c => c.idCliente);",
+                  "pm.test(\"Encuentra a Juan y no a Ana\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idCliente1\"))); pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"idCliente2\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "C04b Filtrar por dirección (HU-05)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes?direccion=martín 1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "direccion",
+                  "value": "martín 1"
                 }
               ]
             }
@@ -1174,6 +1211,50 @@
                   "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
                   "const j = pm.response.json();",
                   "pm.test(\"Error en email\", () => pm.expect(j.errores).to.have.property(\"email\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "C10b Teléfono inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"X\",\n  \"apellido\": \"Y\",\n  \"direccion\": \"Z\",\n  \"telefono\": \"llamame\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Error en teléfono\", () => pm.expect(j.errores).to.have.property(\"telefono\"));"
                 ]
               }
             }
@@ -1498,7 +1579,7 @@
           ]
         },
         {
-          "name": "D02 Borrar a Ana",
+          "name": "D02 Dar de baja a Ana (baja lógica, HU-04)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1527,7 +1608,7 @@
           ]
         },
         {
-          "name": "D03 Ana ya no existe",
+          "name": "D03 Ana sigue en la base, inactiva",
           "request": {
             "method": "GET",
             "header": [],
@@ -1549,42 +1630,34 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"activo = false\", () => pm.expect(j.activo).to.eql(false));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "D04 Reasignar sifón a Juan (para probar borrado en cascada)",
+          "name": "D03b Ana no aparece en la lista",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/clientes/{{idCliente1}}/productos",
+              "raw": "{{baseUrl}}/api/clientes?buscar=lópez{{sufijo}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "clientes",
-                "{{idCliente1}}",
-                "productos"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"idProducto\": {{idSifon}},\n  \"cantidad\": 3\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "lópez{{sufijo}}"
                 }
-              }
+              ]
             }
           },
           "event": [
@@ -1593,14 +1666,88 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));"
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"No la incluye\", () => pm.expect(j.map(c => c.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idCliente2\"))));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "D05 Borrar a Juan con producto fijo",
+          "name": "D03c Ana aparece con incluirInactivos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes?buscar=lópez{{sufijo}}&incluirInactivos=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "lópez{{sufijo}}"
+                },
+                {
+                  "key": "incluirInactivos",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"La incluye\", () => pm.expect(j.map(c => c.idCliente)).to.include(Number(pm.collectionVariables.get(\"idCliente2\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D03d Ana no está en el recorrido del martes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/dia/TUESDAY",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "dia",
+                "TUESDAY"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"No la incluye\", () => pm.expect(j.map(c => c.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idCliente2\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D05 Dar de baja a Juan",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1848,7 +1995,7 @@
           ]
         },
         {
-          "name": "PP03 Crear cliente Pedro (domingo)",
+          "name": "PP03 Crear cliente Pedro (domingo, 3 sifones en casa)",
           "request": {
             "method": "POST",
             "header": [
@@ -1869,7 +2016,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Test{{sufijo2}}\",\n  \"direccion\": \"Mitre 100\",\n  \"diaEntrega\": \"SUNDAY\"\n}",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Test{{sufijo2}}\",\n  \"direccion\": \"Mitre 100\",\n  \"diaEntrega\": \"SUNDAY\",\n  \"sifonesEnCasa\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2316,7 +2463,8 @@
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
                   "pm.test(\"ENTREGADO al precio del día (1200)\", () => { pm.expect(j.pedido.estado).to.eql(\"ENTREGADO\"); pm.expect(Number(j.pedido.detalles[0].precioUnitario)).to.eql(1200); });",
-                  "pm.test(\"Sin pago\", () => pm.expect(j.pago).to.be.null);"
+                  "pm.test(\"Sin pago\", () => pm.expect(j.pago).to.be.null);",
+                  "pm.test(\"Cambio 1 a 1: se llevó 3 vacíos\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(3));"
                 ]
               }
             }
@@ -2989,35 +3137,6 @@
           ]
         },
         {
-          "name": "PP33 No se puede borrar cliente con pedidos",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "clientes",
-                "{{idClienteP}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
-                ]
-              }
-            }
-          ]
-        },
-        {
           "name": "PP34 Borrar pago cargado por error",
           "request": {
             "method": "DELETE",
@@ -3074,6 +3193,1205 @@
                   "const j = pm.response.json();",
                   "const sif = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
                   "pm.test(\"Debe 6,5 sifones a $1500 = $9750\", () => pm.expect(Number(sif.deudaEnPesos)).to.eql(9750));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 - Estado de cuenta, envases y HU parciales",
+      "description": "HU-02, 04, 05, 06, 07, 08 y 09. Usa los datos creados en la carpeta 4 (correr todo en orden).",
+      "item": [
+        {
+          "name": "Q01 Estado de cuenta: impaga y parcial",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/estado-cuenta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "estado-cuenta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const p1 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const b2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idBidonP\")));",
+                  "pm.test(\"Entrega 1 (3 sifones) IMPAGA\", () => { pm.expect(p1.estado).to.eql(\"IMPAGA\"); pm.expect(Number(p1.unidadesPendientes)).to.eql(3); });",
+                  "pm.test(\"Entrega 2: el pago en la entrega (1,5) la cubre a ella -> PARCIAL, faltan 3,5\", () => { pm.expect(p2.estado).to.eql(\"PARCIAL\"); pm.expect(Number(p2.unidadesCubiertas)).to.eql(1.5); pm.expect(Number(p2.unidadesPendientes)).to.eql(3.5); });",
+                  "pm.test(\"Bidón IMPAGO\", () => pm.expect(b2.estado).to.eql(\"IMPAGA\"));",
+                  "pm.test(\"Total (3 + 3,5) x 1500 + 3000 = 12750\", () => pm.expect(Number(j.totalEnPesos)).to.eql(12750));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q02 Deuda coincide con el estado de cuenta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Total 12750\", () => pm.expect(Number(j.totalEnPesos)).to.eql(12750));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q03 Pago suelto de 3 sifones ($4500)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"idProducto\": {{idSifonP}},\n  \"monto\": 4500,\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"No está vinculado a una entrega\", () => pm.expect(j.idPedido).to.be.null);",
+                  "pm.test(\"3 sifones\", () => pm.expect(Number(j.cantidad)).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q04 El pago suelto cubre la entrega más vieja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/estado-cuenta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "estado-cuenta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const p1 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "pm.test(\"Entrega 1 PAGADA\", () => pm.expect(p1.estado).to.eql(\"PAGADA\"));",
+                  "pm.test(\"Entrega 2 sigue PARCIAL (3,5)\", () => { pm.expect(p2.estado).to.eql(\"PARCIAL\"); pm.expect(Number(p2.unidadesPendientes)).to.eql(3.5); });",
+                  "pm.test(\"Total 3,5 x 1500 + 3000 = 8250\", () => pm.expect(Number(j.totalEnPesos)).to.eql(8250));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q05 Pago de más: 4 sifones ($6000)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"idProducto\": {{idSifonP}},\n  \"monto\": 6000,\n  \"metodoPago\": \"TRANSFERENCIA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q06 Todo pagado y 0,5 sifón a favor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/estado-cuenta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "estado-cuenta"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const sif = j.resumen.find(r => r.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "pm.test(\"Entrega 2 PAGADA\", () => pm.expect(p2.estado).to.eql(\"PAGADA\"));",
+                  "pm.test(\"Sifón: -0,5 (saldo a favor) = -$750\", () => { pm.expect(Number(sif.unidadesAdeudadas)).to.eql(-0.5); pm.expect(Number(sif.deudaEnPesos)).to.eql(-750); });",
+                  "pm.test(\"Total 3000 - 750 = 2250\", () => pm.expect(Number(j.totalEnPesos)).to.eql(2250));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q07 Detalle del cliente (HU-06)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/detalle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "detalle"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Trae datos, sifones en casa y estado de cuenta\", () => { pm.expect(j.cliente.sifonesEnCasa).to.eql(3); pm.expect(Number(j.estadoCuenta.totalEnPesos)).to.eql(2250); pm.expect(j.estadoCuenta.entregas.length).to.eql(3); });",
+                  "pm.test(\"Sin pedidos pendientes\", () => pm.expect(j.pedidosPendientes.length).to.eql(0));",
+                  "pm.test(\"Productos fijos\", () => pm.expect(j.productosFijos.length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q08 Pedido de 2 sifones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-27\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido4\", j.idPedido);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q09 Entrega sin retirar vacíos (el cliente suma 2 sifones)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido4}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido4}}",
+                "entregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vaciosRetirados\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"vaciosRetirados 0\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q10 Pedro ahora tiene 5 sifones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"3 + 2 - 0 = 5\", () => pm.expect(j.sifonesEnCasa).to.eql(5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q11 Pedido de 1 sifón",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-29\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido5\", j.idPedido);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q12 Entrega 1 lleno y retira 4 vacíos",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido5}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido5}}",
+                "entregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vaciosRetirados\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q13 Pedro ahora tiene 2 sifones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"5 + 1 - 4 = 2\", () => pm.expect(j.sifonesEnCasa).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q14 Otro pedido de 1 sifón",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-30\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido6\", j.idPedido);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q15 Retirar más vacíos de los que tiene",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido6}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido6}}",
+                "entregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vaciosRetirados\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Explica el problema\", () => pm.expect(j.mensaje).to.include(\"no se le pueden retirar\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q16 El error no tocó el stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Stock 12 - 2 - 1 = 9\", () => pm.expect(j.stock).to.eql(9));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q17 Corrección manual de sifones en casa",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/sifones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "sifones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sifonesEnCasa\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Quedó en 4\", () => pm.expect(j.sifonesEnCasa).to.eql(4));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q18 Sifones en casa negativo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/sifones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "sifones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sifonesEnCasa\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q19 Cargar stock del día (HU-07)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}",
+                "stock"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Stock 50\", () => pm.expect(j.stock).to.eql(50));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q20 Stock negativo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}",
+                "stock"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q21 Stock sin dato",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}",
+                "stock"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q22 Generar pedidos de hoy sin mandar fecha (HU-08)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "generar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(j).to.be.an(\"array\"));",
+                  "// Borra lo generado para no ensuciar la base con pedidos de clientes reales",
+                  "j.forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q23 Filtrar por dirección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes?direccion=mitre 100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "direccion",
+                  "value": "mitre 100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Incluye a Pedro\", () => pm.expect(j.map(c => c.idCliente)).to.include(Number(pm.collectionVariables.get(\"idClienteP\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q24 Modificar sin mandar sifones no los pisa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Test{{sufijo2}}\",\n  \"direccion\": \"Mitre 100\",\n  \"telefono\": \"+54 9 11 4444-0000\",\n  \"diaEntrega\": \"SUNDAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Teléfono nuevo y sigue con 4 sifones\", () => { pm.expect(j.telefono).to.eql(\"+54 9 11 4444-0000\"); pm.expect(j.sifonesEnCasa).to.eql(4); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q25 Borrar el pedido pendiente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido6}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido6}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q26 Dar de baja a Pedro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q27 Pedro sigue con su historial",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/detalle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "detalle"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Inactivo pero con sus entregas\", () => { pm.expect(j.cliente.activo).to.eql(false); pm.expect(j.estadoCuenta.entregas.length).to.be.above(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q28 No se le pueden crear pedidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-31\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Avisa que está dado de baja\", () => pm.expect(j.mensaje).to.include(\"dado de baja\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q29 No aparece en la lista",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes?buscar=test{{sufijo2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "test{{sufijo2}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"No lo incluye\", () => pm.expect(j.map(c => c.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idClienteP\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q30 Reactivar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/reactivar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "reactivar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"activo = true\", () => pm.expect(j.activo).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Q31 Dejarlo dado de baja",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -3137,6 +4455,18 @@
     },
     {
       "key": "idPagoP",
+      "value": ""
+    },
+    {
+      "key": "idPedido4",
+      "value": ""
+    },
+    {
+      "key": "idPedido5",
+      "value": ""
+    },
+    {
+      "key": "idPedido6",
       "value": ""
     }
   ]

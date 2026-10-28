@@ -2,6 +2,8 @@ package com.soderia.soderia_backend.features.dtos.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.time.DayOfWeek;
@@ -26,7 +28,15 @@ public record ClienteRequest(
         @Size(max = 150, message = "El email no puede superar los 150 caracteres")
         String email,
 
+        // Opcional. Solo números, espacios, guiones y + (ej: +54 9 11 1234-5678)
+        @Pattern(regexp = "^[0-9+\\-\\s]{6,30}$", message = "El teléfono solo puede tener números, espacios, guiones y +")
+        String telefono,
+
         // Opcional. Valores: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-        DayOfWeek diaEntrega
+        DayOfWeek diaEntrega,
+
+        // Opcional. Envases que tiene el cliente en su casa (al crear: 0 si no se manda; al modificar: no cambia)
+        @PositiveOrZero(message = "Los sifones en casa no pueden ser negativos")
+        Integer sifonesEnCasa
 ) {
 }

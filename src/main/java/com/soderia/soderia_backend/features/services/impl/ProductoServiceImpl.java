@@ -4,6 +4,7 @@ import com.soderia.soderia_backend.exceptions.ConflictoException;
 import com.soderia.soderia_backend.exceptions.RecursoNoEncontradoException;
 import com.soderia.soderia_backend.features.dtos.request.PrecioRequest;
 import com.soderia.soderia_backend.features.dtos.request.ProductoRequest;
+import com.soderia.soderia_backend.features.dtos.request.StockRequest;
 import com.soderia.soderia_backend.features.dtos.response.ProductoResponse;
 import com.soderia.soderia_backend.features.mappers.ProductoMapper;
 import com.soderia.soderia_backend.features.models.Producto;
@@ -60,6 +61,14 @@ public class ProductoServiceImpl implements ProductoService {
     public ProductoResponse actualizarPrecio(Long id, PrecioRequest request) {
         Producto producto = obtener(id);
         producto.setPrecio(request.precio());
+        return productoMapper.toResponse(productoRepository.save(producto));
+    }
+
+    // HU-07: el repartidor carga los sifones llenos que sube al transporte al inicio del día
+    @Override
+    public ProductoResponse actualizarStock(Long id, StockRequest request) {
+        Producto producto = obtener(id);
+        producto.setStock(request.stock());
         return productoMapper.toResponse(productoRepository.save(producto));
     }
 

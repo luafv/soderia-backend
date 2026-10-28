@@ -38,6 +38,10 @@ public class Pedido {
     @Builder.Default
     private EstadoPedido estado = EstadoPedido.PENDIENTE;
 
+    // Envases vacíos que se llevó el repartidor en la entrega (null mientras no se entrega)
+    @Column(name = "vacios_retirados")
+    private Integer vaciosRetirados;
+
     // Los detalles se guardan y borran junto con el pedido
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

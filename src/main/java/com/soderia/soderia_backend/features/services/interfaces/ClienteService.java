@@ -3,6 +3,8 @@ package com.soderia.soderia_backend.features.services.interfaces;
 import com.soderia.soderia_backend.features.dtos.request.CantidadRequest;
 import com.soderia.soderia_backend.features.dtos.request.ClienteRequest;
 import com.soderia.soderia_backend.features.dtos.request.ProductoClienteRequest;
+import com.soderia.soderia_backend.features.dtos.request.SifonesRequest;
+import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
 import com.soderia.soderia_backend.features.dtos.response.ProductoClienteResponse;
 
@@ -12,9 +14,11 @@ import java.util.List;
 public interface ClienteService {
 
     // --- Clientes ---
-    List<ClienteResponse> listar(String buscar);
+    List<ClienteResponse> listar(String buscar, String direccion, boolean incluirInactivos);
 
     ClienteResponse buscarPorId(Long id);
+
+    ClienteDetalleResponse detalle(Long id);
 
     List<ClienteResponse> listarPorDia(DayOfWeek dia);
 
@@ -22,7 +26,11 @@ public interface ClienteService {
 
     ClienteResponse actualizar(Long id, ClienteRequest request);
 
-    void eliminar(Long id);
+    ClienteResponse actualizarSifones(Long id, SifonesRequest request);
+
+    void darDeBaja(Long id);
+
+    ClienteResponse reactivar(Long id);
 
     // --- Productos fijos del cliente ---
     List<ProductoClienteResponse> listarProductos(Long idCliente);

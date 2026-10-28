@@ -4,11 +4,16 @@ import com.soderia.soderia_backend.exceptions.RecursoNoEncontradoException;
 import com.soderia.soderia_backend.features.dtos.request.PagoRequest;
 import com.soderia.soderia_backend.features.dtos.response.DeudaProductoResponse;
 import com.soderia.soderia_backend.features.dtos.response.DeudaResponse;
+import com.soderia.soderia_backend.features.dtos.response.EntregaCuentaResponse;
+import com.soderia.soderia_backend.features.dtos.response.EstadoCuentaResponse;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.mappers.PagoMapper;
 import com.soderia.soderia_backend.features.models.Cliente;
+import com.soderia.soderia_backend.features.models.DetallePedido;
 import com.soderia.soderia_backend.features.models.Pago;
+import com.soderia.soderia_backend.features.models.Pedido;
 import com.soderia.soderia_backend.features.models.Producto;
+import com.soderia.soderia_backend.features.models.enums.EstadoPago;
 import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
 import com.soderia.soderia_backend.features.models.enums.MetodoPago;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
@@ -24,7 +29,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,17 +45,20 @@ public class PagoServiceImpl implements PagoService {
     private final DetallePedidoRepository detallePedidoRepository;
     private final PagoMapper pagoMapper;
 
+    // ===================== Pagos =====================
+
     @Override
     public PagoResponse registrar(PagoRequest request) {
         Cliente cliente = obtenerCliente(request.idCliente());
-        Producto producto = obtenerProducto(request.idProducto());
+        Producto producto = productoRepository.findById(request.idProducto())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el producto con id " + request.idProducto()));
         LocalDate fecha = request.fechaPago() != null ? request.fechaPago() : LocalDate.now();
-        return registrarPago(cliente, producto, request.monto(), request.metodoPago(), fecha);
+        return registrarPago(cliente, producto, request.monto(), request.metodoPago(), fecha, null);
     }
 
     @Override
     public PagoResponse registrarPago(Cliente cliente, Producto producto, BigDecimal monto,
-                                      MetodoPago metodoPago, LocalDate fecha) {
+                                      MetodoPago metodoPago, LocalDate fecha, Pedido pedido) {
         // La plata se convierte a unidades con el precio de HOY del producto.
         // Ej: $68.500 con el sifón a $1.000 = 68,5 sifones pagados.
         BigDecimal unidades = monto.divide(producto.getPrecio(), 4, RoundingMode.HALF_UP);
@@ -55,6 +66,7 @@ public class PagoServiceImpl implements PagoService {
         Pago pago = Pago.builder()
                 .cliente(cliente)
                 .producto(producto)
+                .pedido(pedido)
                 .monto(monto)
                 .cantidad(unidades)
                 .metodoPago(metodoPago)
@@ -79,57 +91,152 @@ public class PagoServiceImpl implements PagoService {
         pagoRepository.delete(pago);
     }
 
+    // ===================== Deuda y estado de cuenta =====================
+
     @Override
     @Transactional(readOnly = true)
     public DeudaResponse calcularDeuda(Long idCliente) {
+        // Sale del mismo cálculo que el estado de cuenta, así nunca pueden dar distinto
+        EstadoCuentaResponse cuenta = estadoDeCuenta(idCliente);
+        return new DeudaResponse(cuenta.idCliente(), cuenta.cliente(), cuenta.resumen(), cuenta.totalEnPesos());
+    }
+
+    /*
+     * Cómo se aplican los pagos a las entregas (todo en unidades del producto):
+     *  1. Un pago cobrado en una entrega cubre primero ESA entrega. Si sobra, va al pozo.
+     *  2. Los pagos sueltos van directo al pozo.
+     *  3. El pozo cubre las entregas impagas de la más vieja a la más nueva.
+     *  4. Si después de cubrir todo sobra, es saldo a favor del cliente.
+     * Nada de esto se guarda: se recalcula cada vez, así siempre coincide con los datos.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public EstadoCuentaResponse estadoDeCuenta(Long idCliente) {
         Cliente cliente = obtenerCliente(idCliente);
 
-        List<DeudaProductoResponse> productos = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        List<DetallePedido> entregas = detallePedidoRepository.buscarPorClienteYEstado(idCliente, EstadoPedido.ENTREGADO);
+        List<Pago> pagos = pagoRepository.findByClienteIdClienteOrderByFechaPagoAscIdPagoAsc(idCliente);
 
-        for (Producto producto : productoRepository.findAll()) {
-            Long entregadas = detallePedidoRepository.sumarCantidadEntregada(
-                    idCliente, producto.getIdProducto(), EstadoPedido.ENTREGADO);
-            BigDecimal pagadas = pagoRepository.sumarCantidadPagada(idCliente, producto.getIdProducto());
+        Map<Long, BigDecimal> cubierto = new HashMap<>();   // idDetallePedido -> unidades cubiertas
+        Map<Long, BigDecimal> pozo = new HashMap<>();       // idProducto -> unidades pagadas sin aplicar
+        Map<Long, Producto> productos = new LinkedHashMap<>();
 
-            long totalEntregadas = entregadas != null ? entregadas : 0L;
-            BigDecimal totalPagadas = pagadas != null ? pagadas : BigDecimal.ZERO;
+        entregas.forEach(d -> productos.putIfAbsent(d.getProducto().getIdProducto(), d.getProducto()));
+        pagos.forEach(p -> productos.putIfAbsent(p.getProducto().getIdProducto(), p.getProducto()));
 
-            // Solo se muestran los productos con movimientos
-            if (totalEntregadas == 0 && totalPagadas.signum() == 0) {
-                continue;
+        // 1 y 2. Pagos vinculados a una entrega y pagos sueltos
+        for (Pago pago : pagos) {
+            Long idProducto = pago.getProducto().getIdProducto();
+            BigDecimal restante = pago.getCantidad();
+
+            if (pago.getPedido() != null) {
+                DetallePedido detalle = buscarRenglon(entregas, pago.getPedido().getIdPedido(), idProducto);
+                if (detalle != null) {
+                    restante = restante.subtract(aplicar(detalle, restante, cubierto));
+                }
             }
-
-            BigDecimal adeudadas = BigDecimal.valueOf(totalEntregadas).subtract(totalPagadas);
-            BigDecimal enPesos = adeudadas.multiply(producto.getPrecio()).setScale(2, RoundingMode.HALF_UP);
-
-            productos.add(new DeudaProductoResponse(
-                    producto.getIdProducto(),
-                    producto.getNombre(),
-                    totalEntregadas,
-                    totalPagadas,
-                    adeudadas,
-                    producto.getPrecio(),
-                    enPesos
-            ));
-            total = total.add(enPesos);
+            pozo.merge(idProducto, restante, BigDecimal::add);
         }
 
-        return new DeudaResponse(
+        // 3. El pozo cubre las entregas impagas, de la más vieja a la más nueva
+        for (DetallePedido detalle : entregas) {
+            Long idProducto = detalle.getProducto().getIdProducto();
+            BigDecimal disponible = pozo.getOrDefault(idProducto, BigDecimal.ZERO);
+            if (disponible.signum() > 0) {
+                pozo.put(idProducto, disponible.subtract(aplicar(detalle, disponible, cubierto)));
+            }
+        }
+
+        // Detalle de cada entrega (de la más nueva a la más vieja)
+        List<EntregaCuentaResponse> detalleEntregas = new ArrayList<>();
+        for (int i = entregas.size() - 1; i >= 0; i--) {
+            DetallePedido d = entregas.get(i);
+            BigDecimal cantidad = BigDecimal.valueOf(d.getCantidad());
+            BigDecimal cubiertas = cubierto.getOrDefault(d.getIdDetallePedido(), BigDecimal.ZERO);
+            BigDecimal pendientes = cantidad.subtract(cubiertas);
+
+            EstadoPago estado;
+            if (pendientes.signum() <= 0) {
+                estado = EstadoPago.PAGADA;
+            } else if (cubiertas.signum() > 0) {
+                estado = EstadoPago.PARCIAL;
+            } else {
+                estado = EstadoPago.IMPAGA;
+            }
+
+            detalleEntregas.add(new EntregaCuentaResponse(
+                    d.getPedido().getIdPedido(),
+                    d.getPedido().getFechaEntrega(),
+                    d.getProducto().getIdProducto(),
+                    d.getProducto().getNombre(),
+                    d.getCantidad(),
+                    cubiertas,
+                    pendientes,
+                    enPesos(pendientes, d.getProducto().getPrecio()),
+                    estado
+            ));
+        }
+
+        // Resumen por producto y total (negativo = saldo a favor)
+        List<DeudaProductoResponse> resumen = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+        for (Producto producto : productos.values()) {
+            Long idProducto = producto.getIdProducto();
+            long entregadas = entregas.stream()
+                    .filter(d -> d.getProducto().getIdProducto().equals(idProducto))
+                    .mapToLong(DetallePedido::getCantidad)
+                    .sum();
+            BigDecimal pagadas = pagos.stream()
+                    .filter(p -> p.getProducto().getIdProducto().equals(idProducto))
+                    .map(Pago::getCantidad)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal adeudadas = BigDecimal.valueOf(entregadas).subtract(pagadas);
+            BigDecimal pesos = enPesos(adeudadas, producto.getPrecio());
+
+            resumen.add(new DeudaProductoResponse(
+                    idProducto, producto.getNombre(), entregadas, pagadas, adeudadas, producto.getPrecio(), pesos));
+            total = total.add(pesos);
+        }
+
+        return new EstadoCuentaResponse(
                 cliente.getIdCliente(),
                 cliente.getNombre() + " " + cliente.getApellido(),
-                productos,
+                cliente.getTelefono(),
+                LocalDate.now(),
+                detalleEntregas,
+                resumen,
                 total
         );
+    }
+
+    // ===================== Auxiliares =====================
+
+    // Cubre lo que pueda del renglón con las unidades disponibles. Devuelve cuánto usó.
+    private BigDecimal aplicar(DetallePedido detalle, BigDecimal disponible, Map<Long, BigDecimal> cubierto) {
+        BigDecimal yaCubierto = cubierto.getOrDefault(detalle.getIdDetallePedido(), BigDecimal.ZERO);
+        BigDecimal falta = BigDecimal.valueOf(detalle.getCantidad()).subtract(yaCubierto);
+        if (falta.signum() <= 0 || disponible.signum() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal usado = falta.min(disponible);
+        cubierto.put(detalle.getIdDetallePedido(), yaCubierto.add(usado));
+        return usado;
+    }
+
+    private DetallePedido buscarRenglon(List<DetallePedido> entregas, Long idPedido, Long idProducto) {
+        return entregas.stream()
+                .filter(d -> d.getPedido().getIdPedido().equals(idPedido)
+                        && d.getProducto().getIdProducto().equals(idProducto))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private BigDecimal enPesos(BigDecimal unidades, BigDecimal precio) {
+        return unidades.multiply(precio).setScale(2, RoundingMode.HALF_UP);
     }
 
     private Cliente obtenerCliente(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el cliente con id " + id));
-    }
-
-    private Producto obtenerProducto(Long id) {
-        return productoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el producto con id " + id));
     }
 }
