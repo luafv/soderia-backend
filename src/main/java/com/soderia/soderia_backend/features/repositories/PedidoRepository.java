@@ -13,7 +13,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByClienteIdClienteOrderByFechaEntregaDesc(Long idCliente);
 
-    List<Pedido> findByFechaEntrega(LocalDate fechaEntrega);
+    // Hoja de ruta: pedidos de una fecha ordenados por dirección del cliente
+    List<Pedido> findByFechaEntregaOrderByClienteDireccionAsc(LocalDate fechaEntrega);
 
-    List<Pedido> findByFechaEntregaAndEstado(LocalDate fechaEntrega, EstadoPedido estado);
+    List<Pedido> findByFechaEntregaAndEstadoOrderByClienteDireccionAsc(LocalDate fechaEntrega, EstadoPedido estado);
+
+    boolean existsByClienteIdClienteAndFechaEntrega(Long idCliente, LocalDate fechaEntrega);
+
+    boolean existsByClienteIdClienteAndFechaEntregaAndIdPedidoNot(Long idCliente, LocalDate fechaEntrega, Long idPedido);
 }

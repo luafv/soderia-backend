@@ -14,5 +14,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     List<Cliente> findByDiaEntregaOrderByDireccionAsc(DayOfWeek diaEntrega);
 
     // Búsqueda por nombre o apellido
-    List<Cliente> findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(String nombre, String apellido);
+    List<Cliente> findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCaseOrderByApellidoAscNombreAsc(
+            String nombre, String apellido);
 }
