@@ -12,11 +12,11 @@ import java.util.List;
 @Repository
 public interface PagoRepository extends JpaRepository<Pago, Long> {
 
-    List<Pago> findByClienteIdClienteOrderByFechaPagoDesc(Long idCliente);
+    List<Pago> findByClienteIdClienteOrderByFechaPagoDescIdPagoDesc(Long idCliente);
 
-    // Total de unidades de un producto que pagó un cliente (para calcular la deuda)
+    // Total de unidades de un producto que pagó un cliente (null si no hay pagos)
     @Query("""
-            SELECT COALESCE(SUM(p.cantidad), 0)
+            SELECT SUM(p.cantidad)
             FROM Pago p
             WHERE p.cliente.idCliente = :idCliente
               AND p.producto.idProducto = :idProducto

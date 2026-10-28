@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "0dbeb669-235a-4b8f-8006-6ff3f4c17f3c",
     "name": "Sodería - pruebas backend",
-    "description": "Pruebas automáticas de Producto y Cliente. Correr con el Collection Runner, en orden. Crea sus propios datos (con un sufijo único) y los borra al final.",
+    "description": "Pruebas automáticas del backend. Correr con el Collection Runner, en orden. Las carpetas 1 a 3 crean y borran sus datos. La 4 deja datos de prueba (nombres con 'test', fechas 2099).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -945,7 +945,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idProducto\": \"{{idSifon}}\",\n  \"cantidad\": 3\n}",
+              "raw": "{\n  \"idProducto\": {{idSifon}},\n  \"cantidad\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1115,7 +1115,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idProducto\": \"{{idSifon}}\",\n  \"cantidad\": 2\n}",
+              "raw": "{\n  \"idProducto\": {{idSifon}},\n  \"cantidad\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1579,7 +1579,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idProducto\": \"{{idSifon}}\",\n  \"cantidad\": 3\n}",
+              "raw": "{\n  \"idProducto\": {{idSifon}},\n  \"cantidad\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1745,6 +1745,1341 @@
           ]
         }
       ]
+    },
+    {
+      "name": "4 - Pedidos y pagos",
+      "description": "Crea un cliente 'Pedro TestXXXXXX' y productos 'P test' con pedidos en fechas de 2099. Los pedidos entregados no se pueden borrar por regla de negocio, así que esos datos de prueba quedan en la base.",
+      "item": [
+        {
+          "name": "PP01 Crear sifón de prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sifón P test {{sufijo2}}\",\n  \"precio\": 1000,\n  \"stock\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"sufijo2\", Date.now().toString().slice(-6));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idSifonP\", j.idProducto);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP02 Crear bidón de prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bidón P test {{sufijo2}}\",\n  \"precio\": 3000,\n  \"stock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idBidonP\", j.idProducto);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP03 Crear cliente Pedro (domingo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Test{{sufijo2}}\",\n  \"direccion\": \"Mitre 100\",\n  \"diaEntrega\": \"SUNDAY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idClienteP\", j.idCliente);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP04 Pedro lleva 3 sifones fijos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "productos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idProducto\": {{idSifonP}},\n  \"cantidad\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP05 Generar pedidos del domingo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "generar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2099-12-06\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "const mio = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Generó el pedido de Pedro\", () => pm.expect(mio).to.exist);",
+                  "pm.collectionVariables.set(\"idPedido1\", mio.idPedido);",
+                  "pm.test(\"PENDIENTE con 3 sifones y total 3000\", () => { pm.expect(mio.estado).to.eql(\"PENDIENTE\"); pm.expect(mio.detalles.length).to.eql(1); pm.expect(mio.detalles[0].cantidad).to.eql(3); pm.expect(Number(mio.total)).to.eql(3000); });",
+                  "// Borra los pedidos generados para otros clientes reales de la base, para no ensuciarla",
+                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP06 Generar de nuevo no duplica",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "generar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2099-12-06\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Pedro no aparece otra vez\", () => pm.expect(j.map(p => p.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idClienteP\"))));",
+                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP07 Hoja de ruta (pendientes del domingo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos?fecha=2099-12-06&estado=PENDIENTE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2099-12-06"
+                },
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Incluye el pedido de Pedro\", () => pm.expect(j.map(p => p.idPedido)).to.include(Number(pm.collectionVariables.get(\"idPedido1\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP08 Segundo pedido el mismo día",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-06\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP09 Pedido manual con 2 productos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-13\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido2\", j.idPedido);",
+                  "pm.test(\"Total 2x1000 + 3000 = 5000\", () => pm.expect(Number(j.total)).to.eql(5000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP10 Producto repetido en el pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-27\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    },\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP11 Modificar pedido pendiente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido2}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-13\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 4\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Total 4x1000 + 3000 = 7000\", () => pm.expect(Number(j.total)).to.eql(7000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP12 Aumenta el sifón a 1200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}/precio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}",
+                "precio"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 1200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP13 Entregar sin cobrar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido1}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido1}}",
+                "entregar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"ENTREGADO al precio del día (1200)\", () => { pm.expect(j.pedido.estado).to.eql(\"ENTREGADO\"); pm.expect(Number(j.pedido.detalles[0].precioUnitario)).to.eql(1200); });",
+                  "pm.test(\"Sin pago\", () => pm.expect(j.pago).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP14 Stock del sifón bajó a 17",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Stock 20 - 3 = 17\", () => pm.expect(j.stock).to.eql(17));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP15 Entregar dos veces",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido1}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido1}}",
+                "entregar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP16 Deuda: debe 3 sifones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const sif = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "pm.test(\"3 entregados, 0 pagados, debe 3 = $3600\", () => { pm.expect(sif.unidadesEntregadas).to.eql(3); pm.expect(Number(sif.unidadesAdeudadas)).to.eql(3); pm.expect(Number(sif.deudaEnPesos)).to.eql(3600); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP17 Cobro sin indicar producto (pedido con 2 productos)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido2}}",
+                "entregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pago\": {\n    \"monto\": 1000,\n    \"metodoPago\": \"EFECTIVO\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP18 El error anterior no tocó el stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Sigue en 17\", () => pm.expect(j.stock).to.eql(17));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP19 Entregar ajustando cantidad y cobrando",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido2}}",
+                "entregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 5\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ],\n  \"pago\": {\n    \"monto\": 1800,\n    \"metodoPago\": \"EFECTIVO\",\n    \"idProducto\": {{idSifonP}}\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Total 5x1200 + 3000 = 9000\", () => pm.expect(Number(j.pedido.total)).to.eql(9000));",
+                  "pm.test(\"$1800 a $1200 = 1,5 sifones pagados\", () => pm.expect(Number(j.pago.cantidad)).to.eql(1.5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP20 Deuda: 6,5 sifones + 1 bidón",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const sif = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const bid = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idBidonP\")));",
+                  "pm.test(\"Sifón: 8 entregados - 1,5 pagados = 6,5 = $7800\", () => { pm.expect(sif.unidadesEntregadas).to.eql(8); pm.expect(Number(sif.unidadesAdeudadas)).to.eql(6.5); pm.expect(Number(sif.deudaEnPesos)).to.eql(7800); });",
+                  "pm.test(\"Bidón: debe 1 = $3000\", () => pm.expect(Number(bid.deudaEnPesos)).to.eql(3000));",
+                  "pm.test(\"Total $10800\", () => pm.expect(Number(j.totalEnPesos)).to.eql(10800));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP21 Pago suelto que salda los sifones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"idProducto\": {{idSifonP}},\n  \"monto\": 7800,\n  \"metodoPago\": \"TRANSFERENCIA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPagoP\", j.idPago);",
+                  "pm.test(\"$7800 a $1200 = 6,5 sifones\", () => pm.expect(Number(j.cantidad)).to.eql(6.5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP22 Aumenta el sifón a 1500",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/{{idSifonP}}/precio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{idSifonP}}",
+                "precio"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 1500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP23 Deuda: sifones en 0 aunque subió",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const sif = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "pm.test(\"Sifón saldado\", () => pm.expect(Number(sif.deudaEnPesos)).to.eql(0));",
+                  "pm.test(\"Total $3000 (solo el bidón)\", () => pm.expect(Number(j.totalEnPesos)).to.eql(3000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP24 Pedido con más bidones que el stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-20\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 10\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"idPedido3\", j.idPedido);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP25 Entregar sin stock suficiente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido3}}",
+                "entregar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Avisa stock insuficiente\", () => pm.expect(j.mensaje).to.include(\"Stock insuficiente\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP26 Marcar ausente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}/ausente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido3}}",
+                "ausente"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"AUSENTE\", () => pm.expect(j.estado).to.eql(\"AUSENTE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP27 No se puede borrar un pedido ausente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{idPedido3}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP28 Ausente no suma deuda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Total sigue en $3000\", () => pm.expect(Number(j.totalEnPesos)).to.eql(3000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP29 Pagos del cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagos/cliente/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagos",
+                "cliente",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Tiene 2 pagos\", () => pm.expect(j.length).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP30 Historial de pedidos del cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/cliente/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "cliente",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Tiene 3 pedidos\", () => pm.expect(j.length).to.eql(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP31 Hoja de ruta sin fecha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP32 Entregar pedido inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/999999/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "999999",
+                "entregar"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP33 No se puede borrar cliente con pedidos",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP34 Borrar pago cargado por error",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagos/{{idPagoP}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagos",
+                "{{idPagoP}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PP35 Al borrar el pago vuelve la deuda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{idClienteP}}/deuda",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{idClienteP}}",
+                "deuda"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const sif = j.productos.find(p => p.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "pm.test(\"Debe 6,5 sifones a $1500 = $9750\", () => pm.expect(Number(sif.deudaEnPesos)).to.eql(9750));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -1770,6 +3105,38 @@
     },
     {
       "key": "idCliente2",
+      "value": ""
+    },
+    {
+      "key": "sufijo2",
+      "value": ""
+    },
+    {
+      "key": "idSifonP",
+      "value": ""
+    },
+    {
+      "key": "idBidonP",
+      "value": ""
+    },
+    {
+      "key": "idClienteP",
+      "value": ""
+    },
+    {
+      "key": "idPedido1",
+      "value": ""
+    },
+    {
+      "key": "idPedido2",
+      "value": ""
+    },
+    {
+      "key": "idPedido3",
+      "value": ""
+    },
+    {
+      "key": "idPagoP",
       "value": ""
     }
   ]

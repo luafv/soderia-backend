@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -25,6 +26,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictoException.class)
     public ResponseEntity<ErrorResponse> manejarConflicto(ConflictoException ex) {
         return construir(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(SolicitudInvalidaException.class)
+    public ResponseEntity<ErrorResponse> manejarSolicitudInvalida(SolicitudInvalidaException ex) {
+        return construir(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+    }
+
+    // Falta un parámetro obligatorio en la URL (ej: /api/pedidos sin ?fecha=)
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> manejarParametroFaltante(MissingServletRequestParameterException ex) {
+        return construir(HttpStatus.BAD_REQUEST, "Falta el parámetro obligatorio '" + ex.getParameterName() + "'", null);
     }
 
     // Errores de las validaciones de los DTOs (@NotBlank, @NotNull, etc.)

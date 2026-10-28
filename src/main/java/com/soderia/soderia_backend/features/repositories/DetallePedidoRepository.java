@@ -14,9 +14,9 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Lo
 
     List<DetallePedido> findByPedidoIdPedido(Long idPedido);
 
-    // Total de unidades de un producto que se le entregaron a un cliente (para calcular la deuda)
+    // Total de unidades de un producto entregadas a un cliente (null si no hay ninguna)
     @Query("""
-            SELECT COALESCE(SUM(d.cantidad), 0)
+            SELECT SUM(d.cantidad)
             FROM DetallePedido d
             WHERE d.pedido.cliente.idCliente = :idCliente
               AND d.producto.idProducto = :idProducto

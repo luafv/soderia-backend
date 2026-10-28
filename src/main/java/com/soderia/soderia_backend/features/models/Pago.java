@@ -34,14 +34,15 @@ public class Pago {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
-    // Cantidad de unidades que cubre este pago
-    @Column(nullable = false)
-    private Integer cantidad;
+    // Unidades que cubre este pago = monto / precio del producto al momento del pago.
+    // Puede tener decimales (ej: 68.5 sifones) porque el cliente paga en plata.
+    @Column(nullable = false, precision = 12, scale = 4)
+    private BigDecimal cantidad;
 
     @Column(name = "fecha_pago", nullable = false)
     private LocalDate fechaPago;
 
-    // cantidad x precio del producto al momento del pago
+    // Plata que entregó el cliente
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal monto;
 
