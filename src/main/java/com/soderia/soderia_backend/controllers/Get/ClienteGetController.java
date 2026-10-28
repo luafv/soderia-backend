@@ -1,5 +1,6 @@
 package com.soderia.soderia_backend.controllers.Get;
 
+import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
 import com.soderia.soderia_backend.features.dtos.response.ProductoClienteResponse;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
@@ -21,11 +22,17 @@ public class ClienteGetController {
 
     private final ClienteService clienteService;
 
-    // GET /api/clientes            -> todos
-    // GET /api/clientes?buscar=gom -> filtra por nombre o apellido
+    // HU-05. Todos los filtros son opcionales:
+    // GET /api/clientes
+    // GET /api/clientes?buscar=gom
+    // GET /api/clientes?direccion=san martin
+    // GET /api/clientes?incluirInactivos=true   (incluye los dados de baja)
     @GetMapping
-    public ResponseEntity<List<ClienteResponse>> listar(@RequestParam(required = false) String buscar) {
-        return ResponseEntity.ok(clienteService.listar(buscar));
+    public ResponseEntity<List<ClienteResponse>> listar(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(defaultValue = "false") boolean incluirInactivos) {
+        return ResponseEntity.ok(clienteService.listar(buscar, direccion, incluirInactivos));
     }
 
     @GetMapping("/{id}")
@@ -33,7 +40,13 @@ public class ClienteGetController {
         return ResponseEntity.ok(clienteService.buscarPorId(id));
     }
 
-    // GET /api/clientes/dia/TUESDAY -> recorrido del martes
+    // HU-06: datos, sifones en casa, productos fijos, pedidos por entregar y estado de cuenta
+    @GetMapping("/{id}/detalle")
+    public ResponseEntity<ClienteDetalleResponse> detalle(@PathVariable Long id) {
+        return ResponseEntity.ok(clienteService.detalle(id));
+    }
+
+    // GET /api/clientes/dia/TUESDAY -> recorrido del martes (solo clientes activos)
     @GetMapping("/dia/{dia}")
     public ResponseEntity<List<ClienteResponse>> listarPorDia(@PathVariable DayOfWeek dia) {
         return ResponseEntity.ok(clienteService.listarPorDia(dia));

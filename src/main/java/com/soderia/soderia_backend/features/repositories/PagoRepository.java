@@ -14,6 +14,9 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     List<Pago> findByClienteIdClienteOrderByFechaPagoDescIdPagoDesc(Long idCliente);
 
+    // Del más viejo al más nuevo: para aplicar los pagos a las entregas en orden
+    List<Pago> findByClienteIdClienteOrderByFechaPagoAscIdPagoAsc(Long idCliente);
+
     // Total de unidades de un producto que pagó un cliente (null si no hay pagos)
     @Query("""
             SELECT SUM(p.cantidad)

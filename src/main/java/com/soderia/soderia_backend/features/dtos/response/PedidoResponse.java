@@ -14,6 +14,7 @@ public record PedidoResponse(
         LocalDate fechaEntrega,
         EstadoPedido estado,
         List<DetallePedidoResponse> detalles,
-        BigDecimal total
+        BigDecimal total,
+        Integer vaciosRetirados
 ) {
 }

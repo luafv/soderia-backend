@@ -34,6 +34,12 @@ public class Pago {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
+    // Si se cobró en una entrega, queda vinculado a ese pedido y lo cubre primero.
+    // Si es un pago suelto, queda en null y cubre las entregas impagas más viejas.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_pedido")
+    private Pedido pedido;
+
     // Unidades que cubre este pago = monto / precio del producto al momento del pago.
     // Puede tener decimales (ej: 68.5 sifones) porque el cliente paga en plata.
     @Column(nullable = false, precision = 12, scale = 4)

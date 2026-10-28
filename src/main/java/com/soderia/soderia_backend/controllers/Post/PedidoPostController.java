@@ -31,9 +31,10 @@ public class PedidoPostController {
                 .body(creado);
     }
 
-    // Crea los pedidos PENDIENTES de una fecha con los productos fijos de cada cliente de ese día
+    // HU-08: crea los pedidos PENDIENTES de una fecha con los productos fijos de cada cliente activo de ese día.
+    // El body es opcional: sin body (o sin fecha) genera los de hoy.
     @PostMapping("/generar")
-    public ResponseEntity<List<PedidoResponse>> generar(@Valid @RequestBody GenerarPedidosRequest request) {
+    public ResponseEntity<List<PedidoResponse>> generar(@RequestBody(required = false) GenerarPedidosRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoService.generarPedidosDelDia(request));
     }
 }

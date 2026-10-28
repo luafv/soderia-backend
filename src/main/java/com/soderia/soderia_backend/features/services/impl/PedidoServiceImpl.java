@@ -76,7 +76,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public PedidoResponse crear(PedidoRequest request) {
-        Cliente cliente = obtenerCliente(request.idCliente());
+        Cliente cliente = obtenerClienteActivo(request.idCliente());
         if (pedidoRepository.existsByClienteIdClienteAndFechaEntrega(cliente.getIdCliente(), request.fechaEntrega())) {
             throw new ConflictoException("El cliente ya tiene un pedido para el " + request.fechaEntrega()
                     + ". Modificá ese pedido en lugar de crear otro");
@@ -92,10 +92,11 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public List<PedidoResponse> generarPedidosDelDia(GenerarPedidosRequest request) {
-        LocalDate fecha = request.fecha();
+        // HU-08: si no se manda fecha, se generan los de hoy
+        LocalDate fecha = (request == null || request.fecha() == null) ? LocalDate.now() : request.fecha();
         List<PedidoResponse> creados = new ArrayList<>();
 
-        for (Cliente cliente : clienteRepository.findByDiaEntregaOrderByDireccionAsc(fecha.getDayOfWeek())) {
+        for (Cliente cliente : clienteRepository.findByDiaEntregaAndActivoTrueOrderByDireccionAsc(fecha.getDayOfWeek())) {
             // Si ya tiene pedido ese día, no se duplica
             if (pedidoRepository.existsByClienteIdClienteAndFechaEntrega(cliente.getIdCliente(), fecha)) {
                 continue;
@@ -127,7 +128,7 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "modificar");
 
-        Cliente cliente = obtenerCliente(request.idCliente());
+        Cliente cliente = obtenerClienteActivo(request.idCliente());
         if (pedidoRepository.existsByClienteIdClienteAndFechaEntregaAndIdPedidoNot(
                 cliente.getIdCliente(), request.fechaEntrega(), id)) {
             throw new ConflictoException("El cliente ya tiene otro pedido para el " + request.fechaEntrega());
@@ -160,7 +161,20 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        // 3. Descontar stock y fijar el precio del día de la entrega
+        // 3. HU-09: envases en casa del cliente = antes + llenos que deja - vacíos que se lleva.
+        //    Si no se informan los vacíos, se asume el cambio 1 a 1.
+        Cliente cliente = pedido.getCliente();
+        int llenos = pedido.getDetalles().stream().mapToInt(DetallePedido::getCantidad).sum();
+        int vacios = (request != null && request.vaciosRetirados() != null) ? request.vaciosRetirados() : llenos;
+        int enCasa = cliente.getSifonesEnCasa() + llenos - vacios;
+        if (enCasa < 0) {
+            throw new SolicitudInvalidaException("El cliente tenía " + cliente.getSifonesEnCasa()
+                    + " sifones en casa y recibe " + llenos + ": no se le pueden retirar " + vacios + " vacíos");
+        }
+        cliente.setSifonesEnCasa(enCasa);
+        pedido.setVaciosRetirados(vacios);
+
+        // 4. Descontar stock y fijar el precio del día de la entrega
         for (DetallePedido detalle : pedido.getDetalles()) {
             Producto producto = detalle.getProducto();
             producto.setStock(producto.getStock() - detalle.getCantidad());
@@ -170,13 +184,13 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setEstado(EstadoPedido.ENTREGADO);
         PedidoResponse pedidoResponse = pedidoMapper.toResponse(pedidoRepository.save(pedido));
 
-        // 4. Si cobró en el momento, se registra el pago
+        // 5. Si cobró en el momento, se registra el pago vinculado a esta entrega
         PagoResponse pagoResponse = null;
         if (request != null && request.pago() != null) {
             PagoEntregaRequest pago = request.pago();
             Producto productoPagado = elegirProductoDelPago(pedido, pago.idProducto());
             pagoResponse = pagoService.registrarPago(pedido.getCliente(), productoPagado,
-                    pago.monto(), pago.metodoPago(), pedido.getFechaEntrega());
+                    pago.monto(), pago.metodoPago(), pedido.getFechaEntrega(), pedido);
         }
 
         return new EntregaResponse(pedidoResponse, pagoResponse);
@@ -248,6 +262,14 @@ public class PedidoServiceImpl implements PedidoService {
     private Cliente obtenerCliente(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el cliente con id " + id));
+    }
+
+    private Cliente obtenerClienteActivo(Long id) {
+        Cliente cliente = obtenerCliente(id);
+        if (!Boolean.TRUE.equals(cliente.getActivo())) {
+            throw new ConflictoException("El cliente " + id + " está dado de baja");
+        }
+        return cliente;
     }
 
     private Producto obtenerProducto(Long id) {

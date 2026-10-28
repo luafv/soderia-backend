@@ -13,6 +13,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByClienteIdClienteOrderByFechaEntregaDesc(Long idCliente);
 
+    // Pedidos de un cliente en un estado (ej: los PENDIENTES por entregar)
+    List<Pedido> findByClienteIdClienteAndEstadoOrderByFechaEntregaAsc(Long idCliente, EstadoPedido estado);
+
     // Hoja de ruta: pedidos de una fecha ordenados por dirección del cliente
     List<Pedido> findByFechaEntregaOrderByClienteDireccionAsc(LocalDate fechaEntrega);
 

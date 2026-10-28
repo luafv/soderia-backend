@@ -29,7 +29,8 @@ public class PedidoMapper {
                 pedido.getFechaEntrega(),
                 pedido.getEstado(),
                 detalles,
-                total
+                total,
+                pedido.getVaciosRetirados()
         );
     }
 

@@ -1,6 +1,7 @@
 package com.soderia.soderia_backend.controllers.Get;
 
 import com.soderia.soderia_backend.features.dtos.response.DeudaResponse;
+import com.soderia.soderia_backend.features.dtos.response.EstadoCuentaResponse;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,15 @@ public class PagoGetController {
         return ResponseEntity.ok(pagoService.listarPorCliente(idCliente));
     }
 
-    // Deuda del cliente, en unidades y en pesos al precio de hoy
+    // HU-11: deuda total del cliente, en unidades y en pesos al precio de hoy
     @GetMapping("/clientes/{idCliente}/deuda")
     public ResponseEntity<DeudaResponse> deuda(@PathVariable Long idCliente) {
         return ResponseEntity.ok(pagoService.calcularDeuda(idCliente));
+    }
+
+    // Cada entrega con su estado (PAGADA / PARCIAL / IMPAGA) y el total
+    @GetMapping("/clientes/{idCliente}/estado-cuenta")
+    public ResponseEntity<EstadoCuentaResponse> estadoCuenta(@PathVariable Long idCliente) {
+        return ResponseEntity.ok(pagoService.estadoDeCuenta(idCliente));
     }
 }

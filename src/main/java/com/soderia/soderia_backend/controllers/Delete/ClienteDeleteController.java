@@ -15,9 +15,10 @@ public class ClienteDeleteController {
 
     private final ClienteService clienteService;
 
+    // HU-04: baja lógica. No se borra de la base, queda inactivo con todo su historial.
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        clienteService.eliminar(id);
+    public ResponseEntity<Void> darDeBaja(@PathVariable Long id) {
+        clienteService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 

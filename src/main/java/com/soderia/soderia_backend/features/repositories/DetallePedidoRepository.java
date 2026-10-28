@@ -25,4 +25,14 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Lo
     Long sumarCantidadEntregada(@Param("idCliente") Long idCliente,
                                 @Param("idProducto") Long idProducto,
                                 @Param("estado") EstadoPedido estado);
+
+    // Renglones de los pedidos de un cliente en un estado, del más viejo al más nuevo
+    @Query("""
+            SELECT d FROM DetallePedido d
+            WHERE d.pedido.cliente.idCliente = :idCliente
+              AND d.pedido.estado = :estado
+            ORDER BY d.pedido.fechaEntrega ASC, d.pedido.idPedido ASC
+            """)
+    List<DetallePedido> buscarPorClienteYEstado(@Param("idCliente") Long idCliente,
+                                                @Param("estado") EstadoPedido estado);
 }

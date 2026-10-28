@@ -35,8 +35,22 @@ public class Cliente {
     @Column(length = 150)
     private String email;
 
-    // Día fijo de reparto (LUNES..DOMINGO se guarda como MONDAY..SUNDAY)
+    // Para mandarle el estado de cuenta por WhatsApp
+    @Column(length = 30)
+    private String telefono;
+
+    // Día fijo de reparto (MONDAY..SUNDAY)
     @Enumerated(EnumType.STRING)
     @Column(name = "dia_entrega", length = 10)
     private DayOfWeek diaEntrega;
+
+    // Envases de la sodería que tiene el cliente en su casa (llenos + vacíos)
+    @Column(name = "sifones_en_casa", columnDefinition = "integer default 0 not null")
+    @Builder.Default
+    private Integer sifonesEnCasa = 0;
+
+    // Baja lógica: un cliente dado de baja no se borra, se marca como inactivo
+    @Column(columnDefinition = "boolean default true not null")
+    @Builder.Default
+    private Boolean activo = true;
 }
