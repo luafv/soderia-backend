@@ -14,12 +14,10 @@ import com.soderia.soderia_backend.features.dtos.response.PedidoResponse;
 import com.soderia.soderia_backend.features.mappers.PedidoMapper;
 import com.soderia.soderia_backend.features.models.Cliente;
 import com.soderia.soderia_backend.features.models.DetallePedido;
-import com.soderia.soderia_backend.features.models.DetalleProductoCliente;
 import com.soderia.soderia_backend.features.models.Pedido;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
-import com.soderia.soderia_backend.features.repositories.DetalleProductoClienteRepository;
 import com.soderia.soderia_backend.features.repositories.PedidoRepository;
 import com.soderia.soderia_backend.features.repositories.ProductoRepository;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
@@ -42,7 +40,6 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
-    private final DetalleProductoClienteRepository detalleProductoClienteRepository;
     private final PagoService pagoService;
     private final PedidoMapper pedidoMapper;
 
@@ -101,23 +98,12 @@ public class PedidoServiceImpl implements PedidoService {
             if (pedidoRepository.existsByClienteIdClienteAndFechaEntrega(cliente.getIdCliente(), fecha)) {
                 continue;
             }
-            List<DetalleProductoCliente> fijos = detalleProductoClienteRepository.findByClienteIdCliente(cliente.getIdCliente());
-            // Si no tiene productos fijos, no hay nada que llevarle
-            if (fijos.isEmpty()) {
-                continue;
-            }
-
+            // Visita pendiente SIN cantidades: lo que se deja se registra recién en la casa del cliente.
+            // La respuesta trae un "sugerido" = los envases que el cliente tiene en casa.
             Pedido pedido = Pedido.builder()
                     .cliente(cliente)
                     .fechaEntrega(fecha)
                     .build();
-            for (DetalleProductoCliente fijo : fijos) {
-                pedido.agregarDetalle(DetallePedido.builder()
-                        .producto(fijo.getProducto())
-                        .cantidad(fijo.getCantidad())
-                        .precioUnitario(fijo.getProducto().getPrecio())
-                        .build());
-            }
             creados.add(pedidoMapper.toResponse(pedidoRepository.save(pedido)));
         }
         return creados;
@@ -147,9 +133,15 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "entregar");
 
-        // 1. Si el repartidor informa lo que realmente entregó, reemplaza lo planificado
+        // 1. Lo que el repartidor dejó en la casa. Si lo informa, reemplaza lo que tuviera el pedido.
         if (request != null && request.detalles() != null && !request.detalles().isEmpty()) {
             cargarDetalles(pedido, request.detalles());
+        }
+        // Una visita generada del día no tiene cantidades: hay que decir cuánto se dejó
+        if (pedido.getDetalles().isEmpty()) {
+            throw new SolicitudInvalidaException("Indicá cuántos sifones le dejaste al cliente (detalles). "
+                    + "Sugerido: " + pedido.getCliente().getSifonesEnCasa()
+                    + ". Si no estaba, marcá la visita como ausente");
         }
 
         // 2. Verificar stock de todo antes de descontar nada
@@ -162,10 +154,13 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         // 3. HU-09: envases en casa del cliente = antes + llenos que deja - vacíos que se lleva.
-        //    Si no se informan los vacíos, se asume el cambio 1 a 1.
+        //    Si no se informan los vacíos, se asume el cambio: se lleva tantos vacíos como llenos deja,
+        //    pero nunca más de los envases que tenía el cliente.
         Cliente cliente = pedido.getCliente();
         int llenos = pedido.getDetalles().stream().mapToInt(DetallePedido::getCantidad).sum();
-        int vacios = (request != null && request.vaciosRetirados() != null) ? request.vaciosRetirados() : llenos;
+        int vacios = (request != null && request.vaciosRetirados() != null)
+                ? request.vaciosRetirados()
+                : Math.min(llenos, cliente.getSifonesEnCasa());
         int enCasa = cliente.getSifonesEnCasa() + llenos - vacios;
         if (enCasa < 0) {
             throw new SolicitudInvalidaException("El cliente tenía " + cliente.getSifonesEnCasa()

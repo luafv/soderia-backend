@@ -21,11 +21,4 @@ public class ClienteDeleteController {
         clienteService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
-
-    // Quita un producto fijo del cliente
-    @DeleteMapping("/{id}/productos/{idProducto}")
-    public ResponseEntity<Void> quitarProducto(@PathVariable Long id, @PathVariable Long idProducto) {
-        clienteService.quitarProducto(id, idProducto);
-        return ResponseEntity.noContent().build();
-    }
 }

@@ -30,7 +30,8 @@ public class PedidoMapper {
                 pedido.getEstado(),
                 detalles,
                 total,
-                pedido.getVaciosRetirados()
+                pedido.getVaciosRetirados(),
+                pedido.getCliente().getSifonesEnCasa()
         );
     }
 
