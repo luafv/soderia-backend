@@ -6,7 +6,7 @@ import java.util.List;
 // visitas pendientes y estado de cuenta
 public record ClienteDetalleResponse(
         ClienteResponse cliente,
-        List<PedidoResponse> pedidosPendientes,
+        List<VisitaResponse> visitasPendientes,
         EstadoCuentaResponse estadoCuenta
 ) {
 }

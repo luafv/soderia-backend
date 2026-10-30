@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
         return construir(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
     }
 
-    // Falta un parámetro obligatorio en la URL (ej: /api/pedidos sin ?fecha=)
+    // Falta un parámetro obligatorio en la URL (ej: /api/visitas sin ?fecha=)
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> manejarParametroFaltante(MissingServletRequestParameterException ex) {
         return construir(HttpStatus.BAD_REQUEST, "Falta el parámetro obligatorio '" + ex.getParameterName() + "'", null);
@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
         return construir(HttpStatus.BAD_REQUEST, mensaje, null);
     }
 
-    // Ej: borrar un producto que ya se usó en pedidos
+    // Ej: borrar un producto que ya se usó en visitas
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> manejarIntegridad(DataIntegrityViolationException ex) {
         return construir(HttpStatus.CONFLICT,

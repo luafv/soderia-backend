@@ -4,6 +4,7 @@ import com.soderia.soderia_backend.features.dtos.request.PagoRequest;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+@Tag(name = "Pagos y cuentas", description = "Cobros, deuda y estado de cuenta")
 @RestController
 @RequestMapping("/api/pagos")
 @RequiredArgsConstructor

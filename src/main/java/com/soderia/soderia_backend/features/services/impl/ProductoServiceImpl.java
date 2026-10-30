@@ -76,7 +76,7 @@ public class ProductoServiceImpl implements ProductoService {
     public void eliminar(Long id) {
         Producto producto = obtener(id);
         productoRepository.delete(producto);
-        // flush para que, si el producto está usado en pedidos o pagos, el error salte acá
+        // flush para que, si el producto está usado en visitas o pagos, el error salte acá
         productoRepository.flush();
     }
 

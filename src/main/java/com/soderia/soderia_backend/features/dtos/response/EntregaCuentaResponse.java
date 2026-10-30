@@ -7,8 +7,8 @@ import java.time.LocalDate;
 
 // Un renglón entregado con su estado de pago (en unidades y en pesos al precio de hoy)
 public record EntregaCuentaResponse(
-        Long idPedido,
-        LocalDate fechaEntrega,
+        Long idVisita,
+        LocalDate fecha,
         Long idProducto,
         String nombreProducto,
         Integer cantidad,

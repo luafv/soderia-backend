@@ -1,6 +1,6 @@
 package com.soderia.soderia_backend.features.models;
 
-import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
+import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,47 +13,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "pedidos")
+@Table(name = "visitas")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pedido {
+public class Visita {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_pedido")
-    private Long idPedido;
+    @Column(name = "id_visita")
+    private Long idVisita;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
 
-    @Column(name = "fecha_entrega", nullable = false)
-    private LocalDate fechaEntrega;
+    @Column(nullable = false)
+    private LocalDate fecha;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private EstadoPedido estado = EstadoPedido.PENDIENTE;
+    private EstadoVisita estado = EstadoVisita.PENDIENTE;
 
     // Envases vacíos que se llevó el repartidor en la entrega (null mientras no se entrega)
     @Column(name = "vacios_retirados")
     private Integer vaciosRetirados;
 
-    // Los detalles se guardan y borran junto con el pedido
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Los detalles se guardan y borran junto con la visita
+    @OneToMany(mappedBy = "visita", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<DetallePedido> detalles = new ArrayList<>();
+    private List<DetalleVisita> detalles = new ArrayList<>();
 
-    public void agregarDetalle(DetallePedido detalle) {
+    public void agregarDetalle(DetalleVisita detalle) {
         detalles.add(detalle);
-        detalle.setPedido(this);
-    }
-
-    public void quitarDetalle(DetallePedido detalle) {
-        detalles.remove(detalle);
-        detalle.setPedido(null);
+        detalle.setVisita(this);
     }
 }

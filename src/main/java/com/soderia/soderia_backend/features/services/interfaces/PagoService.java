@@ -5,7 +5,7 @@ import com.soderia.soderia_backend.features.dtos.response.DeudaResponse;
 import com.soderia.soderia_backend.features.dtos.response.EstadoCuentaResponse;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.models.Cliente;
-import com.soderia.soderia_backend.features.models.Pedido;
+import com.soderia.soderia_backend.features.models.Visita;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.enums.MetodoPago;
 
@@ -18,9 +18,9 @@ public interface PagoService {
     // Pago suelto (no vinculado a una entrega)
     PagoResponse registrar(PagoRequest request);
 
-    // Usado también por la entrega de pedidos. pedido = null si es un pago suelto.
+    // Usado también por la entrega de visitas. visita = null si es un pago suelto.
     PagoResponse registrarPago(Cliente cliente, Producto producto, BigDecimal monto,
-                               MetodoPago metodoPago, LocalDate fecha, Pedido pedido);
+                               MetodoPago metodoPago, LocalDate fecha, Visita visita);
 
     List<PagoResponse> listarPorCliente(Long idCliente);
 

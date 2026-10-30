@@ -20,7 +20,7 @@ public record ReporteRecorridoResponse(
         Integer stockInicial,
         Integer stockRestante,
         Integer totalVisitas,
-        Integer entregados,
+        Integer entregadas,
         Integer ausentes,
         Integer pendientes,
         Integer sifonesEntregados,

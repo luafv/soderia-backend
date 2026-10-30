@@ -1,7 +1,7 @@
 package com.soderia.soderia_backend.features.models.enums;
 
-public enum EstadoPedido {
+public enum EstadoVisita {
     PENDIENTE,
-    ENTREGADO,
+    ENTREGADA,
     AUSENTE
 }

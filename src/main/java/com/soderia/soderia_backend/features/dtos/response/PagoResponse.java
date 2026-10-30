@@ -11,7 +11,7 @@ public record PagoResponse(
         String cliente,
         Long idProducto,
         String nombreProducto,
-        Long idPedido,
+        Long idVisita,
         LocalDate fechaPago,
         BigDecimal monto,
         BigDecimal cantidad,

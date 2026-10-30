@@ -4,6 +4,7 @@ import com.soderia.soderia_backend.features.dtos.request.ProductoRequest;
 import com.soderia.soderia_backend.features.dtos.response.ProductoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.ProductoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+@Tag(name = "Productos", description = "Catálogo, precio y stock del camión")
 @RestController
 @RequestMapping("/api/productos")
 @RequiredArgsConstructor

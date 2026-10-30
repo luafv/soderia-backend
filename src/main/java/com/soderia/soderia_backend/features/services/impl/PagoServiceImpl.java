@@ -9,15 +9,15 @@ import com.soderia.soderia_backend.features.dtos.response.EstadoCuentaResponse;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.mappers.PagoMapper;
 import com.soderia.soderia_backend.features.models.Cliente;
-import com.soderia.soderia_backend.features.models.DetallePedido;
+import com.soderia.soderia_backend.features.models.DetalleVisita;
 import com.soderia.soderia_backend.features.models.Pago;
-import com.soderia.soderia_backend.features.models.Pedido;
+import com.soderia.soderia_backend.features.models.Visita;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.enums.EstadoPago;
-import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
+import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import com.soderia.soderia_backend.features.models.enums.MetodoPago;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
-import com.soderia.soderia_backend.features.repositories.DetallePedidoRepository;
+import com.soderia.soderia_backend.features.repositories.DetalleVisitaRepository;
 import com.soderia.soderia_backend.features.repositories.PagoRepository;
 import com.soderia.soderia_backend.features.repositories.ProductoRepository;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
@@ -42,7 +42,7 @@ public class PagoServiceImpl implements PagoService {
     private final PagoRepository pagoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
-    private final DetallePedidoRepository detallePedidoRepository;
+    private final DetalleVisitaRepository detalleVisitaRepository;
     private final PagoMapper pagoMapper;
 
     // ===================== Pagos =====================
@@ -58,7 +58,7 @@ public class PagoServiceImpl implements PagoService {
 
     @Override
     public PagoResponse registrarPago(Cliente cliente, Producto producto, BigDecimal monto,
-                                      MetodoPago metodoPago, LocalDate fecha, Pedido pedido) {
+                                      MetodoPago metodoPago, LocalDate fecha, Visita visita) {
         // La plata se convierte a unidades con el precio de HOY del producto.
         // Ej: $68.500 con el sifón a $1.000 = 68,5 sifones pagados.
         BigDecimal unidades = monto.divide(producto.getPrecio(), 4, RoundingMode.HALF_UP);
@@ -66,7 +66,7 @@ public class PagoServiceImpl implements PagoService {
         Pago pago = Pago.builder()
                 .cliente(cliente)
                 .producto(producto)
-                .pedido(pedido)
+                .visita(visita)
                 .monto(monto)
                 .cantidad(unidades)
                 .metodoPago(metodoPago)
@@ -114,10 +114,10 @@ public class PagoServiceImpl implements PagoService {
     public EstadoCuentaResponse estadoDeCuenta(Long idCliente) {
         Cliente cliente = obtenerCliente(idCliente);
 
-        List<DetallePedido> entregas = detallePedidoRepository.buscarPorClienteYEstado(idCliente, EstadoPedido.ENTREGADO);
+        List<DetalleVisita> entregas = detalleVisitaRepository.buscarPorClienteYEstado(idCliente, EstadoVisita.ENTREGADA);
         List<Pago> pagos = pagoRepository.findByClienteIdClienteOrderByFechaPagoAscIdPagoAsc(idCliente);
 
-        Map<Long, BigDecimal> cubierto = new HashMap<>();   // idDetallePedido -> unidades cubiertas
+        Map<Long, BigDecimal> cubierto = new HashMap<>();   // idDetalleVisita -> unidades cubiertas
         Map<Long, BigDecimal> pozo = new HashMap<>();       // idProducto -> unidades pagadas sin aplicar
         Map<Long, Producto> productos = new LinkedHashMap<>();
 
@@ -129,8 +129,8 @@ public class PagoServiceImpl implements PagoService {
             Long idProducto = pago.getProducto().getIdProducto();
             BigDecimal restante = pago.getCantidad();
 
-            if (pago.getPedido() != null) {
-                DetallePedido detalle = buscarRenglon(entregas, pago.getPedido().getIdPedido(), idProducto);
+            if (pago.getVisita() != null) {
+                DetalleVisita detalle = buscarRenglon(entregas, pago.getVisita().getIdVisita(), idProducto);
                 if (detalle != null) {
                     restante = restante.subtract(aplicar(detalle, restante, cubierto));
                 }
@@ -139,7 +139,7 @@ public class PagoServiceImpl implements PagoService {
         }
 
         // 3. El pozo cubre las entregas impagas, de la más vieja a la más nueva
-        for (DetallePedido detalle : entregas) {
+        for (DetalleVisita detalle : entregas) {
             Long idProducto = detalle.getProducto().getIdProducto();
             BigDecimal disponible = pozo.getOrDefault(idProducto, BigDecimal.ZERO);
             if (disponible.signum() > 0) {
@@ -150,9 +150,9 @@ public class PagoServiceImpl implements PagoService {
         // Detalle de cada entrega (de la más nueva a la más vieja)
         List<EntregaCuentaResponse> detalleEntregas = new ArrayList<>();
         for (int i = entregas.size() - 1; i >= 0; i--) {
-            DetallePedido d = entregas.get(i);
+            DetalleVisita d = entregas.get(i);
             BigDecimal cantidad = BigDecimal.valueOf(d.getCantidad());
-            BigDecimal cubiertas = cubierto.getOrDefault(d.getIdDetallePedido(), BigDecimal.ZERO);
+            BigDecimal cubiertas = cubierto.getOrDefault(d.getIdDetalleVisita(), BigDecimal.ZERO);
             BigDecimal pendientes = cantidad.subtract(cubiertas);
 
             EstadoPago estado;
@@ -165,8 +165,8 @@ public class PagoServiceImpl implements PagoService {
             }
 
             detalleEntregas.add(new EntregaCuentaResponse(
-                    d.getPedido().getIdPedido(),
-                    d.getPedido().getFechaEntrega(),
+                    d.getVisita().getIdVisita(),
+                    d.getVisita().getFecha(),
                     d.getProducto().getIdProducto(),
                     d.getProducto().getNombre(),
                     d.getCantidad(),
@@ -184,7 +184,7 @@ public class PagoServiceImpl implements PagoService {
             Long idProducto = producto.getIdProducto();
             long entregadas = entregas.stream()
                     .filter(d -> d.getProducto().getIdProducto().equals(idProducto))
-                    .mapToLong(DetallePedido::getCantidad)
+                    .mapToLong(DetalleVisita::getCantidad)
                     .sum();
             BigDecimal pagadas = pagos.stream()
                     .filter(p -> p.getProducto().getIdProducto().equals(idProducto))
@@ -212,20 +212,20 @@ public class PagoServiceImpl implements PagoService {
     // ===================== Auxiliares =====================
 
     // Cubre lo que pueda del renglón con las unidades disponibles. Devuelve cuánto usó.
-    private BigDecimal aplicar(DetallePedido detalle, BigDecimal disponible, Map<Long, BigDecimal> cubierto) {
-        BigDecimal yaCubierto = cubierto.getOrDefault(detalle.getIdDetallePedido(), BigDecimal.ZERO);
+    private BigDecimal aplicar(DetalleVisita detalle, BigDecimal disponible, Map<Long, BigDecimal> cubierto) {
+        BigDecimal yaCubierto = cubierto.getOrDefault(detalle.getIdDetalleVisita(), BigDecimal.ZERO);
         BigDecimal falta = BigDecimal.valueOf(detalle.getCantidad()).subtract(yaCubierto);
         if (falta.signum() <= 0 || disponible.signum() <= 0) {
             return BigDecimal.ZERO;
         }
         BigDecimal usado = falta.min(disponible);
-        cubierto.put(detalle.getIdDetallePedido(), yaCubierto.add(usado));
+        cubierto.put(detalle.getIdDetalleVisita(), yaCubierto.add(usado));
         return usado;
     }
 
-    private DetallePedido buscarRenglon(List<DetallePedido> entregas, Long idPedido, Long idProducto) {
+    private DetalleVisita buscarRenglon(List<DetalleVisita> entregas, Long idVisita, Long idProducto) {
         return entregas.stream()
-                .filter(d -> d.getPedido().getIdPedido().equals(idPedido)
+                .filter(d -> d.getVisita().getIdVisita().equals(idVisita)
                         && d.getProducto().getIdProducto().equals(idProducto))
                 .findFirst()
                 .orElse(null);

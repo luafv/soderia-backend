@@ -5,13 +5,13 @@ import com.soderia.soderia_backend.features.dtos.request.ClienteRequest;
 import com.soderia.soderia_backend.features.dtos.request.SifonesRequest;
 import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
-import com.soderia.soderia_backend.features.dtos.response.PedidoResponse;
+import com.soderia.soderia_backend.features.dtos.response.VisitaResponse;
 import com.soderia.soderia_backend.features.mappers.ClienteMapper;
-import com.soderia.soderia_backend.features.mappers.PedidoMapper;
+import com.soderia.soderia_backend.features.mappers.VisitaMapper;
 import com.soderia.soderia_backend.features.models.Cliente;
-import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
+import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
-import com.soderia.soderia_backend.features.repositories.PedidoRepository;
+import com.soderia.soderia_backend.features.repositories.VisitaRepository;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +27,10 @@ import java.util.List;
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
-    private final PedidoRepository pedidoRepository;
+    private final VisitaRepository visitaRepository;
     private final PagoService pagoService;
     private final ClienteMapper clienteMapper;
-    private final PedidoMapper pedidoMapper;
+    private final VisitaMapper visitaMapper;
 
     // HU-05: lista con filtros opcionales por nombre/apellido y por dirección
     @Override
@@ -52,9 +52,9 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional(readOnly = true)
     public ClienteDetalleResponse detalle(Long id) {
         Cliente cliente = obtenerCliente(id);
-        List<PedidoResponse> pendientes = pedidoRepository
-                .findByClienteIdClienteAndEstadoOrderByFechaEntregaAsc(id, EstadoPedido.PENDIENTE).stream()
-                .map(pedidoMapper::toResponse)
+        List<VisitaResponse> pendientes = visitaRepository
+                .findByClienteIdClienteAndEstadoOrderByFechaAsc(id, EstadoVisita.PENDIENTE).stream()
+                .map(visitaMapper::toResponse)
                 .toList();
         return new ClienteDetalleResponse(
                 clienteMapper.toResponse(cliente),

@@ -4,6 +4,7 @@ import com.soderia.soderia_backend.features.dtos.request.IniciarRecorridoRequest
 import com.soderia.soderia_backend.features.dtos.response.ReporteRecorridoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.RecorridoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 
+@Tag(name = "Recorridos", description = "Inicio y cierre del día, reporte y calendario")
 @RestController
 @RequestMapping("/api/recorridos")
 @RequiredArgsConstructor

@@ -18,7 +18,7 @@ public record PagoEntregaRequest(
         @NotNull(message = "El método de pago es obligatorio")
         MetodoPago metodoPago,
 
-        // Opcional: si el pedido tiene un solo producto, se usa ese
+        // Opcional: si la visita tiene un solo producto, se usa ese
         Long idProducto
 ) {
 }
