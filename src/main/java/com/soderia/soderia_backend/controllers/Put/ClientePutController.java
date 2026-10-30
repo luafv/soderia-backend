@@ -1,9 +1,7 @@
 package com.soderia.soderia_backend.controllers.Put;
 
-import com.soderia.soderia_backend.features.dtos.request.CantidadRequest;
 import com.soderia.soderia_backend.features.dtos.request.ClienteRequest;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
-import com.soderia.soderia_backend.features.dtos.response.ProductoClienteResponse;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +23,5 @@ public class ClientePutController {
     public ResponseEntity<ClienteResponse> actualizar(@PathVariable Long id,
                                                       @Valid @RequestBody ClienteRequest request) {
         return ResponseEntity.ok(clienteService.actualizar(id, request));
-    }
-
-    // Cambia la cantidad de un producto fijo del cliente
-    @PutMapping("/{id}/productos/{idProducto}")
-    public ResponseEntity<ProductoClienteResponse> actualizarCantidadProducto(@PathVariable Long id,
-                                                                              @PathVariable Long idProducto,
-                                                                              @Valid @RequestBody CantidadRequest request) {
-        return ResponseEntity.ok(clienteService.actualizarCantidadProducto(id, idProducto, request));
     }
 }

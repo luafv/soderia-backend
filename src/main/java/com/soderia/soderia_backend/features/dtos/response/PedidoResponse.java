@@ -15,6 +15,8 @@ public record PedidoResponse(
         EstadoPedido estado,
         List<DetallePedidoResponse> detalles,
         BigDecimal total,
-        Integer vaciosRetirados
+        Integer vaciosRetirados,
+        // Envases que el cliente tiene en casa: cantidad sugerida para dejarle (cambio completo)
+        Integer sugerido
 ) {
 }

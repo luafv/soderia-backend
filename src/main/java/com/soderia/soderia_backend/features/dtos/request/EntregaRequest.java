@@ -5,10 +5,10 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.util.List;
 
-// Todo es opcional:
-// - detalles: si se mandan, reemplazan lo que tenía el pedido (lo que realmente se entregó)
-// - vaciosRetirados: envases vacíos que se llevó el repartidor. Si no se manda, se asume
-//   el cambio 1 a 1 (se lleva tantos vacíos como llenos deja)
+// - detalles: lo que el repartidor dejó en la casa. Obligatorio si la visita no tiene cantidades
+//   (las visitas generadas del día no tienen); si se manda, reemplaza lo que tuviera el pedido.
+// - vaciosRetirados: envases vacíos que se llevó. Si no se manda, se asume el cambio:
+//   tantos vacíos como llenos deja, sin superar los envases que tenía el cliente.
 // - pago: si se manda, se registra el cobro en el momento y queda vinculado a esta entrega
 public record EntregaRequest(
         List<@Valid DetallePedidoRequest> detalles,
