@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -16,6 +17,9 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     // Del más viejo al más nuevo: para aplicar los pagos a las entregas en orden
     List<Pago> findByClienteIdClienteOrderByFechaPagoAscIdPagoAsc(Long idCliente);
+
+    // Pagos cobrados en una fecha (en entregas o sueltos): para el reporte del día
+    List<Pago> findByFechaPago(LocalDate fechaPago);
 
     // Total de unidades de un producto que pagó un cliente (null si no hay pagos)
     @Query("""

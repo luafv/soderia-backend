@@ -17,9 +17,11 @@ import com.soderia.soderia_backend.features.models.DetallePedido;
 import com.soderia.soderia_backend.features.models.Pedido;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
+import com.soderia.soderia_backend.features.models.enums.EstadoRecorrido;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
 import com.soderia.soderia_backend.features.repositories.PedidoRepository;
 import com.soderia.soderia_backend.features.repositories.ProductoRepository;
+import com.soderia.soderia_backend.features.repositories.RecorridoRepository;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
 import com.soderia.soderia_backend.features.services.interfaces.PedidoService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProductoRepository productoRepository;
+    private final RecorridoRepository recorridoRepository;
     private final PagoService pagoService;
     private final PedidoMapper pedidoMapper;
 
@@ -73,6 +76,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public PedidoResponse crear(PedidoRequest request) {
+        validarDiaAbierto(request.fechaEntrega());
         Cliente cliente = obtenerClienteActivo(request.idCliente());
         if (pedidoRepository.existsByClienteIdClienteAndFechaEntrega(cliente.getIdCliente(), request.fechaEntrega())) {
             throw new ConflictoException("El cliente ya tiene un pedido para el " + request.fechaEntrega()
@@ -91,6 +95,7 @@ public class PedidoServiceImpl implements PedidoService {
     public List<PedidoResponse> generarPedidosDelDia(GenerarPedidosRequest request) {
         // HU-08: si no se manda fecha, se generan los de hoy
         LocalDate fecha = (request == null || request.fecha() == null) ? LocalDate.now() : request.fecha();
+        validarDiaAbierto(fecha);
         List<PedidoResponse> creados = new ArrayList<>();
 
         for (Cliente cliente : clienteRepository.findByDiaEntregaAndActivoTrueOrderByDireccionAsc(fecha.getDayOfWeek())) {
@@ -113,6 +118,8 @@ public class PedidoServiceImpl implements PedidoService {
     public PedidoResponse actualizar(Long id, PedidoRequest request) {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "modificar");
+        validarDiaAbierto(pedido.getFechaEntrega());
+        validarDiaAbierto(request.fechaEntrega());
 
         Cliente cliente = obtenerClienteActivo(request.idCliente());
         if (pedidoRepository.existsByClienteIdClienteAndFechaEntregaAndIdPedidoNot(
@@ -132,6 +139,7 @@ public class PedidoServiceImpl implements PedidoService {
     public EntregaResponse entregar(Long id, EntregaRequest request) {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "entregar");
+        validarDiaAbierto(pedido.getFechaEntrega());
 
         // 1. Lo que el repartidor dejó en la casa. Si lo informa, reemplaza lo que tuviera el pedido.
         if (request != null && request.detalles() != null && !request.detalles().isEmpty()) {
@@ -195,6 +203,7 @@ public class PedidoServiceImpl implements PedidoService {
     public PedidoResponse marcarAusente(Long id) {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "marcar como ausente");
+        validarDiaAbierto(pedido.getFechaEntrega());
         pedido.setEstado(EstadoPedido.AUSENTE);
         return pedidoMapper.toResponse(pedidoRepository.save(pedido));
     }
@@ -203,6 +212,7 @@ public class PedidoServiceImpl implements PedidoService {
     public void eliminar(Long id) {
         Pedido pedido = obtenerPedido(id);
         validarPendiente(pedido, "eliminar");
+        validarDiaAbierto(pedido.getFechaEntrega());
         pedidoRepository.delete(pedido);
     }
 
@@ -240,6 +250,15 @@ public class PedidoServiceImpl implements PedidoService {
         }
         throw new SolicitudInvalidaException(
                 "El pedido tiene varios productos: indicá en el pago a qué producto corresponde (idProducto)");
+    }
+
+    // Si el recorrido de esa fecha está cerrado, no se puede tocar nada de ese día
+    private void validarDiaAbierto(LocalDate fecha) {
+        recorridoRepository.findByFecha(fecha)
+                .filter(r -> r.getEstado() == EstadoRecorrido.CERRADO)
+                .ifPresent(r -> {
+                    throw new ConflictoException("El recorrido del " + fecha + " está cerrado. Solo el admin puede reabrirlo");
+                });
     }
 
     private void validarPendiente(Pedido pedido, String accion) {
