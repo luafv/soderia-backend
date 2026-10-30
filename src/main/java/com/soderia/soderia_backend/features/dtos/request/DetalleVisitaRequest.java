@@ -3,8 +3,8 @@ package com.soderia.soderia_backend.features.dtos.request;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-// Un renglón del pedido: qué producto y cuántas unidades
-public record DetallePedidoRequest(
+// Un renglón de la visita: qué producto y cuántas unidades
+public record DetalleVisitaRequest(
 
         @NotNull(message = "El producto es obligatorio")
         Long idProducto,

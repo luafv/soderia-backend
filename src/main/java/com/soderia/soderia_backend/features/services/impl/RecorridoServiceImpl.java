@@ -3,24 +3,24 @@ package com.soderia.soderia_backend.features.services.impl;
 import com.soderia.soderia_backend.exceptions.ConflictoException;
 import com.soderia.soderia_backend.exceptions.RecursoNoEncontradoException;
 import com.soderia.soderia_backend.exceptions.SolicitudInvalidaException;
-import com.soderia.soderia_backend.features.dtos.request.GenerarPedidosRequest;
+import com.soderia.soderia_backend.features.dtos.request.GenerarVisitasRequest;
 import com.soderia.soderia_backend.features.dtos.request.IniciarRecorridoRequest;
 import com.soderia.soderia_backend.features.dtos.response.ReporteRecorridoResponse;
 import com.soderia.soderia_backend.features.dtos.response.ResumenRecorridoResponse;
 import com.soderia.soderia_backend.features.dtos.response.VisitaReporteResponse;
-import com.soderia.soderia_backend.features.models.DetallePedido;
+import com.soderia.soderia_backend.features.models.DetalleVisita;
 import com.soderia.soderia_backend.features.models.Pago;
-import com.soderia.soderia_backend.features.models.Pedido;
+import com.soderia.soderia_backend.features.models.Visita;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.Recorrido;
-import com.soderia.soderia_backend.features.models.enums.EstadoPedido;
+import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import com.soderia.soderia_backend.features.models.enums.EstadoRecorrido;
 import com.soderia.soderia_backend.features.models.enums.MetodoPago;
 import com.soderia.soderia_backend.features.repositories.PagoRepository;
-import com.soderia.soderia_backend.features.repositories.PedidoRepository;
+import com.soderia.soderia_backend.features.repositories.VisitaRepository;
 import com.soderia.soderia_backend.features.repositories.ProductoRepository;
 import com.soderia.soderia_backend.features.repositories.RecorridoRepository;
-import com.soderia.soderia_backend.features.services.interfaces.PedidoService;
+import com.soderia.soderia_backend.features.services.interfaces.VisitaService;
 import com.soderia.soderia_backend.features.services.interfaces.RecorridoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,9 +40,9 @@ public class RecorridoServiceImpl implements RecorridoService {
 
     private final RecorridoRepository recorridoRepository;
     private final ProductoRepository productoRepository;
-    private final PedidoRepository pedidoRepository;
+    private final VisitaRepository visitaRepository;
     private final PagoRepository pagoRepository;
-    private final PedidoService pedidoService;
+    private final VisitaService visitaService;
 
     // ===================== Iniciar y finalizar =====================
 
@@ -68,7 +68,7 @@ public class RecorridoServiceImpl implements RecorridoService {
                 .build());
 
         // 3. Visitas del día para los clientes activos de ese día (HU-08)
-        pedidoService.generarPedidosDelDia(new GenerarPedidosRequest(fecha));
+        visitaService.generarVisitasDelDia(new GenerarVisitasRequest(fecha));
 
         return armarReporte(recorrido);
     }
@@ -81,8 +81,8 @@ public class RecorridoServiceImpl implements RecorridoService {
         }
 
         // Los clientes que no se visitaron quedan como ausentes
-        for (Pedido pedido : pedidoRepository.findByFechaEntregaAndEstadoOrderByClienteDireccionAsc(fecha, EstadoPedido.PENDIENTE)) {
-            pedido.setEstado(EstadoPedido.AUSENTE);
+        for (Visita visita : visitaRepository.findByFechaAndEstadoOrderByClienteDireccionAsc(fecha, EstadoVisita.PENDIENTE)) {
+            visita.setEstado(EstadoVisita.AUSENTE);
         }
 
         recorrido.setEstado(EstadoRecorrido.CERRADO);
@@ -118,27 +118,27 @@ public class RecorridoServiceImpl implements RecorridoService {
     private ReporteRecorridoResponse armarReporte(Recorrido recorrido) {
         LocalDate fecha = recorrido.getFecha();
         Producto producto = recorrido.getProducto();
-        List<Pedido> pedidos = pedidoRepository.findByFechaEntregaOrderByClienteDireccionAsc(fecha);
+        List<Visita> visitas = visitaRepository.findByFechaOrderByClienteDireccionAsc(fecha);
         List<Pago> pagos = pagoRepository.findByFechaPago(fecha);
 
-        int entregados = 0, ausentes = 0, pendientes = 0, sifones = 0, vacios = 0, delProducto = 0;
+        int entregadas = 0, ausentes = 0, pendientes = 0, sifones = 0, vacios = 0, delProducto = 0;
         BigDecimal vendido = BigDecimal.ZERO;
-        List<VisitaReporteResponse> visitas = new ArrayList<>();
+        List<VisitaReporteResponse> detalle = new ArrayList<>();
 
-        for (Pedido pedido : pedidos) {
+        for (Visita visita : visitas) {
             int dejados = 0;
             BigDecimal importe = BigDecimal.ZERO;
-            if (pedido.getEstado() == EstadoPedido.ENTREGADO) {
-                entregados++;
-                for (DetallePedido d : pedido.getDetalles()) {
+            if (visita.getEstado() == EstadoVisita.ENTREGADA) {
+                entregadas++;
+                for (DetalleVisita d : visita.getDetalles()) {
                     dejados += d.getCantidad();
                     importe = importe.add(d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())));
                     if (d.getProducto().getIdProducto().equals(producto.getIdProducto())) {
                         delProducto += d.getCantidad();
                     }
                 }
-                vacios += pedido.getVaciosRetirados() != null ? pedido.getVaciosRetirados() : 0;
-            } else if (pedido.getEstado() == EstadoPedido.AUSENTE) {
+                vacios += visita.getVaciosRetirados() != null ? visita.getVaciosRetirados() : 0;
+            } else if (visita.getEstado() == EstadoVisita.AUSENTE) {
                 ausentes++;
             } else {
                 pendientes++;
@@ -147,18 +147,18 @@ public class RecorridoServiceImpl implements RecorridoService {
             vendido = vendido.add(importe);
 
             BigDecimal cobrado = pagos.stream()
-                    .filter(p -> p.getPedido() != null && Objects.equals(p.getPedido().getIdPedido(), pedido.getIdPedido()))
+                    .filter(p -> p.getVisita() != null && Objects.equals(p.getVisita().getIdVisita(), visita.getIdVisita()))
                     .map(Pago::getMonto)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            visitas.add(new VisitaReporteResponse(
-                    pedido.getIdPedido(),
-                    pedido.getCliente().getIdCliente(),
-                    pedido.getCliente().getNombre() + " " + pedido.getCliente().getApellido(),
-                    pedido.getCliente().getDireccion(),
-                    pedido.getEstado(),
+            detalle.add(new VisitaReporteResponse(
+                    visita.getIdVisita(),
+                    visita.getCliente().getIdCliente(),
+                    visita.getCliente().getNombre() + " " + visita.getCliente().getApellido(),
+                    visita.getCliente().getDireccion(),
+                    visita.getEstado(),
                     dejados,
-                    pedido.getVaciosRetirados(),
+                    visita.getVaciosRetirados(),
                     importe,
                     cobrado
             ));
@@ -177,8 +177,8 @@ public class RecorridoServiceImpl implements RecorridoService {
                 producto.getNombre(),
                 recorrido.getStockInicial(),
                 recorrido.getStockInicial() - delProducto,
-                pedidos.size(),
-                entregados,
+                visitas.size(),
+                entregadas,
                 ausentes,
                 pendientes,
                 sifones,
@@ -188,7 +188,7 @@ public class RecorridoServiceImpl implements RecorridoService {
                 transferencia,
                 cobrado,
                 vendido.subtract(cobrado),
-                visitas
+                detalle
         );
     }
 

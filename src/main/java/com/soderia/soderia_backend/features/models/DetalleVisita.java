@@ -10,22 +10,22 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "detalles_pedido")
+@Table(name = "detalles_visita")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DetallePedido {
+public class DetalleVisita {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_detalle_pedido")
-    private Long idDetallePedido;
+    @Column(name = "id_detalle_visita")
+    private Long idDetalleVisita;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_pedido", nullable = false)
-    private Pedido pedido;
+    @JoinColumn(name = "id_visita", nullable = false)
+    private Visita visita;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_producto", nullable = false)
@@ -34,7 +34,7 @@ public class DetallePedido {
     @Column(nullable = false)
     private Integer cantidad;
 
-    // Precio del producto al momento del pedido (no cambia si después cambia el precio)
+    // Precio del producto al momento de la visita (no cambia si después cambia el precio)
     @Column(name = "precio_unitario", nullable = false, precision = 12, scale = 2)
     private BigDecimal precioUnitario;
 }

@@ -8,7 +8,7 @@
   "item": [
     {
       "name": "0 - Flujo completo de un día de reparto",
-      "description": "Historia completa de punta a punta, independiente del resto (se puede correr sola). Admin crea el sifón; el repartidor carga el camión, da de alta 3 clientes, genera los pedidos del domingo, entrega (con cobro, con ajuste de cantidad y vacíos, ausente), controla stock, envases y cuentas; sube el precio, cobra un pago suelto, da de baja un cliente y repite la semana siguiente. Usa fechas de 2098 y nombres 'Flujo' + sufijo; los clientes quedan dados de baja al final.",
+      "description": "Historia completa de punta a punta, independiente del resto (se puede correr sola). Admin crea el sifón; el repartidor carga el camión, da de alta 3 clientes, genera las visitas del domingo, entrega (con cobro, con ajuste de cantidad y vacíos, ausente), controla stock, envases y cuentas; sube el precio, cobra un pago suelto, da de baja un cliente y repite la semana siguiente. Usa fechas de 2098 y nombres 'Flujo' + sufijo; los clientes quedan dados de baja al final.",
       "item": [
         {
           "name": "F01 [Admin] Crear el sifón",
@@ -298,13 +298,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             },
@@ -328,12 +328,12 @@
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "const a = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fA\"))), b = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fB\"))), c = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fC\")));",
-                  "pm.test(\"Se generó un pedido para cada uno\", () => { pm.expect(a).to.exist; pm.expect(b).to.exist; pm.expect(c).to.exist; });",
+                  "pm.test(\"Se generó una visita para cada uno\", () => { pm.expect(a).to.exist; pm.expect(b).to.exist; pm.expect(c).to.exist; });",
                   "pm.test(\"Visitas sin cantidades: se completan en la casa\", () => [a,b,c].forEach(p => pm.expect(p.detalles.length).to.eql(0)));",
                   "pm.test(\"Sugerido = sifones en casa (2, 4 y 3)\", () => { pm.expect(a.sugerido).to.eql(2); pm.expect(b.sugerido).to.eql(4); pm.expect(c.sugerido).to.eql(3); });",
                   "pm.test(\"Todos PENDIENTES\", () => [a,b,c].forEach(p => pm.expect(p.estado).to.eql(\"PENDIENTE\")));",
-                  "pm.collectionVariables.set(\"fPedA\", a.idPedido); pm.collectionVariables.set(\"fPedB\", b.idPedido); pm.collectionVariables.set(\"fPedC\", c.idPedido);",
-                  "// Borra los pedidos generados para clientes que no son del flujo (para no ensuciar la base)\nconst mios = [Number(pm.collectionVariables.get(\"fA\")),Number(pm.collectionVariables.get(\"fB\")),Number(pm.collectionVariables.get(\"fC\"))];\nj.filter(p => !mios.includes(p.idCliente)).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                  "pm.collectionVariables.set(\"fPedA\", a.idVisita); pm.collectionVariables.set(\"fPedB\", b.idVisita); pm.collectionVariables.set(\"fPedC\", c.idVisita);",
+                  "// Borra las visitas generados para clientes que no son del flujo (para no ensuciar la base)\nconst mios = [Number(pm.collectionVariables.get(\"fA\")),Number(pm.collectionVariables.get(\"fB\")),Number(pm.collectionVariables.get(\"fC\"))];\nj.filter(p => !mios.includes(p.idCliente)).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + p.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -345,13 +345,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos?fecha=2098-03-02&estado=PENDIENTE",
+              "raw": "{{baseUrl}}/api/visitas?fecha=2098-03-02&estado=PENDIENTE",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas"
               ],
               "query": [
                 {
@@ -374,7 +374,7 @@
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
                   "const mios = j.filter(p => [Number(pm.collectionVariables.get(\"fA\")),Number(pm.collectionVariables.get(\"fB\")),Number(pm.collectionVariables.get(\"fC\"))].includes(p.idCliente));",
-                  "pm.test(\"Los 3 pedidos, ordenados por dirección (Alsina, Belgrano, Colón)\", () => pm.expect(mios.map(p => p.direccion)).to.eql([\"Alsina 100\",\"Belgrano 200\",\"Colón 300\"]));"
+                  "pm.test(\"Los 3 visitas, ordenados por dirección (Alsina, Belgrano, Colón)\", () => pm.expect(mios.map(p => p.direccion)).to.eql([\"Alsina 100\",\"Belgrano 200\",\"Colón 300\"]));"
                 ]
               }
             }
@@ -391,13 +391,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedA}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedA}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedA}}",
                 "entregar"
               ]
@@ -421,9 +421,9 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"ENTREGADO, total $2000\", () => { pm.expect(j.pedido.estado).to.eql(\"ENTREGADO\"); pm.expect(Number(j.pedido.total)).to.eql(2000); });",
-                  "pm.test(\"Cambio 1 a 1: se llevó 2 vacíos\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(2));",
-                  "pm.test(\"Pago de 2 sifones vinculado a la entrega\", () => { pm.expect(Number(j.pago.cantidad)).to.eql(2); pm.expect(j.pago.idPedido).to.eql(j.pedido.idPedido); });"
+                  "pm.test(\"ENTREGADA, total $2000\", () => { pm.expect(j.visita.estado).to.eql(\"ENTREGADA\"); pm.expect(Number(j.visita.total)).to.eql(2000); });",
+                  "pm.test(\"Cambio 1 a 1: se llevó 2 vacíos\", () => pm.expect(j.visita.vaciosRetirados).to.eql(2));",
+                  "pm.test(\"Pago de 2 sifones vinculado a la entrega\", () => { pm.expect(Number(j.pago.cantidad)).to.eql(2); pm.expect(j.pago.idVisita).to.eql(j.visita.idVisita); });"
                 ]
               }
             }
@@ -440,13 +440,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedB}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedB}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedB}}",
                 "entregar"
               ]
@@ -469,7 +469,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Entregó 5, total $5000\", () => { pm.expect(j.pedido.detalles[0].cantidad).to.eql(5); pm.expect(Number(j.pedido.total)).to.eql(5000); });",
+                  "pm.test(\"Entregó 5, total $5000\", () => { pm.expect(j.visita.detalles[0].cantidad).to.eql(5); pm.expect(Number(j.visita.total)).to.eql(5000); });",
                   "pm.test(\"Sin pago\", () => pm.expect(j.pago).to.be.null);"
                 ]
               }
@@ -482,13 +482,13 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedC}}/ausente",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedC}}/ausente",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedC}}",
                 "ausente"
               ]
@@ -584,13 +584,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos?fecha=2098-03-02&estado=PENDIENTE",
+              "raw": "{{baseUrl}}/api/visitas?fecha=2098-03-02&estado=PENDIENTE",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas"
               ],
               "query": [
                 {
@@ -864,7 +864,7 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.test(\"3 sifones, pago suelto\", () => { pm.expect(Number(j.cantidad)).to.eql(3); pm.expect(j.idPedido).to.be.null; });"
+                  "pm.test(\"3 sifones, pago suelto\", () => { pm.expect(Number(j.cantidad)).to.eql(3); pm.expect(j.idVisita).to.be.null; });"
                 ]
               }
             }
@@ -932,7 +932,7 @@
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
                   "pm.test(\"5 sifones en casa\", () => pm.expect(j.cliente.sifonesEnCasa).to.eql(5));",
-                  "pm.test(\"Sin pedidos pendientes\", () => pm.expect(j.pedidosPendientes.length).to.eql(0));",
+                  "pm.test(\"Sin visitas pendientes\", () => pm.expect(j.visitasPendientes.length).to.eql(0));",
                   "pm.test(\"Debe $2400\", () => pm.expect(Number(j.estadoCuenta.totalEnPesos)).to.eql(2400));"
                 ]
               }
@@ -1011,13 +1011,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             },
@@ -1042,8 +1042,8 @@
                   "const a = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fA\"))), b = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fB\"))), c = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"fC\")));",
                   "pm.test(\"Rosa y Carlos sí, Marta no (dada de baja)\", () => { pm.expect(a).to.exist; pm.expect(b).to.exist; pm.expect(c).to.not.exist; });",
                   "pm.test(\"Sugerido de Carlos = sus 5 sifones en casa\", () => pm.expect(b.sugerido).to.eql(5));",
-                  "pm.collectionVariables.set(\"fPedA2\", a.idPedido); pm.collectionVariables.set(\"fPedB2\", b.idPedido);",
-                  "// Borra los pedidos generados para clientes que no son del flujo (para no ensuciar la base)\nconst mios = [Number(pm.collectionVariables.get(\"fA\")),Number(pm.collectionVariables.get(\"fB\")),Number(pm.collectionVariables.get(\"fC\"))];\nj.filter(p => !mios.includes(p.idCliente)).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                  "pm.collectionVariables.set(\"fPedA2\", a.idVisita); pm.collectionVariables.set(\"fPedB2\", b.idVisita);",
+                  "// Borra las visitas generados para clientes que no son del flujo (para no ensuciar la base)\nconst mios = [Number(pm.collectionVariables.get(\"fA\")),Number(pm.collectionVariables.get(\"fB\")),Number(pm.collectionVariables.get(\"fC\"))];\nj.filter(p => !mios.includes(p.idCliente)).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + p.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -1055,13 +1055,13 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedB2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedB2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedB2}}",
                 "entregar"
               ]
@@ -1092,13 +1092,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedB2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedB2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedB2}}",
                 "entregar"
               ]
@@ -1167,13 +1167,13 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedB2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedB2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedB2}}",
                 "entregar"
               ]
@@ -1192,106 +1192,35 @@
           ]
         },
         {
-          "name": "F34 [Error] Marta no puede recibir pedidos",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "pedidos"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{fC}},\n  \"fechaEntrega\": \"2098-03-16\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{fProd}},\n      \"cantidad\": 1\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "F35 [Preparación] Rosa pide 100 sifones (más que el stock)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedA2}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "pedidos",
-                "{{fPedA2}}"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{fA}},\n  \"fechaEntrega\": \"2098-03-09\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{fProd}},\n      \"cantidad\": 100\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "F36 [Error] Entregar sin stock suficiente",
+          "name": "F36 [Error] Rosa: quiere 100 sifones y no hay stock",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedA2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedA2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedA2}}",
                 "entregar"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{fProd}},\n      \"cantidad\": 100\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
           "event": [
@@ -1340,18 +1269,18 @@
           ]
         },
         {
-          "name": "F38 [Limpieza] Borrar el pedido pendiente de Rosa",
+          "name": "F38 [Limpieza] Borrar el visita pendiente de Rosa",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{fPedA2}}",
+              "raw": "{{baseUrl}}/api/visitas/{{fPedA2}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{fPedA2}}"
               ]
             }
@@ -2952,8 +2881,8 @@
       ]
     },
     {
-      "name": "4 - Pedidos y pagos",
-      "description": "Crea un cliente 'Pedro TestXXXXXX' y productos 'P test' con pedidos en fechas de 2099. Los pedidos entregados no se pueden borrar por regla de negocio, así que esos datos de prueba quedan en la base.",
+      "name": "4 - Visitas, entregas y pagos",
+      "description": "Crea un cliente 'Pedro TestXXXXXX' y productos 'P test' con visitas en fechas de 2099. Las visitas entregados no se pueden borrar por regla de negocio, así que esos datos de prueba quedan en la base.",
       "item": [
         {
           "name": "PP01 Crear sifón de prueba",
@@ -3097,7 +3026,7 @@
           ]
         },
         {
-          "name": "PP05 Generar pedidos del domingo",
+          "name": "PP05 Generar visitas del domingo",
           "request": {
             "method": "POST",
             "header": [
@@ -3107,13 +3036,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             },
@@ -3137,10 +3066,10 @@
                   "const j = pm.response.json();",
                   "const mio = j.find(p => p.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
                   "pm.test(\"Generó la visita de Pedro\", () => pm.expect(mio).to.exist);",
-                  "pm.collectionVariables.set(\"idPedido1\", mio.idPedido);",
+                  "pm.collectionVariables.set(\"idPedido1\", mio.idVisita);",
                   "pm.test(\"PENDIENTE, sin cantidades, sugerido 3\", () => { pm.expect(mio.estado).to.eql(\"PENDIENTE\"); pm.expect(mio.detalles.length).to.eql(0); pm.expect(mio.sugerido).to.eql(3); });",
-                  "// Borra los pedidos generados para otros clientes reales de la base, para no ensuciarla",
-                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                  "// Borra las visitas generados para otros clientes reales de la base, para no ensuciarla",
+                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + p.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -3157,13 +3086,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             },
@@ -3186,7 +3115,7 @@
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "pm.test(\"Pedro no aparece otra vez\", () => pm.expect(j.map(p => p.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idClienteP\"))));",
-                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                  "j.filter(p => p.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + p.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -3198,13 +3127,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos?fecha=2099-12-06&estado=PENDIENTE",
+              "raw": "{{baseUrl}}/api/visitas?fecha=2099-12-06&estado=PENDIENTE",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas"
               ],
               "query": [
                 {
@@ -3226,14 +3155,14 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Incluye el pedido de Pedro\", () => pm.expect(j.map(p => p.idPedido)).to.include(Number(pm.collectionVariables.get(\"idPedido1\"))));"
+                  "pm.test(\"Incluye la visita de Pedro\", () => pm.expect(j.map(p => p.idVisita)).to.include(Number(pm.collectionVariables.get(\"idPedido1\"))));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "PP08 Segundo pedido el mismo día",
+          "name": "PP09 Visita del domingo 13 (Pedro)",
           "request": {
             "method": "POST",
             "header": [
@@ -3243,60 +3172,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-06\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "PP09 Pedido manual con 2 productos",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "pedidos"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-13\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2099-12-13\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3312,17 +3200,20 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.collectionVariables.set(\"idPedido2\", j.idPedido);",
-                  "pm.test(\"Total 2x1000 + 3000 = 5000\", () => pm.expect(Number(j.total)).to.eql(5000));"
+                  "const mia = j.find(v => v.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Se generó la visita, sin cantidades\", () => { pm.expect(mia).to.exist; pm.expect(mia.detalles.length).to.eql(0); });",
+                  "pm.collectionVariables.set(\"idPedido2\", mia.idVisita);",
+                  "// Borra las visitas generadas para otros clientes (para no ensuciar la base)",
+                  "j.filter(v => v.idVisita && v.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "PP10 Producto repetido en el pedido",
+          "name": "PP10 Producto repetido en la entrega",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
@@ -3330,18 +3221,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "{{idPedido2}}",
+                "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-27\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    },\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    },\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3355,52 +3248,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "PP11 Modificar pedido pendiente",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "pedidos",
-                "{{idPedido2}}"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-13\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 4\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Total 4x1000 + 3000 = 7000\", () => pm.expect(Number(j.total)).to.eql(7000));"
+                  "pm.test(\"Avisa producto repetido\", () => pm.expect(j.mensaje).to.include(\"repetido\"));"
                 ]
               }
             }
@@ -3461,13 +3311,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido1}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido1}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido1}}",
                 "entregar"
               ]
@@ -3490,9 +3340,9 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"ENTREGADO al precio del día (1200)\", () => { pm.expect(j.pedido.estado).to.eql(\"ENTREGADO\"); pm.expect(Number(j.pedido.detalles[0].precioUnitario)).to.eql(1200); });",
+                  "pm.test(\"ENTREGADA al precio del día (1200)\", () => { pm.expect(j.visita.estado).to.eql(\"ENTREGADA\"); pm.expect(Number(j.visita.detalles[0].precioUnitario)).to.eql(1200); });",
                   "pm.test(\"Sin pago\", () => pm.expect(j.pago).to.be.null);",
-                  "pm.test(\"Cambio 1 a 1: se llevó 3 vacíos\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(3));"
+                  "pm.test(\"Cambio 1 a 1: se llevó 3 vacíos\", () => pm.expect(j.visita.vaciosRetirados).to.eql(3));"
                 ]
               }
             }
@@ -3535,13 +3385,13 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido1}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido1}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido1}}",
                 "entregar"
               ]
@@ -3593,7 +3443,7 @@
           ]
         },
         {
-          "name": "PP17 Cobro sin indicar producto (pedido con 2 productos)",
+          "name": "PP17 Cobro sin indicar producto (entrega con 2 productos)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -3603,20 +3453,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido2}}",
                 "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pago\": {\n    \"monto\": 1000,\n    \"metodoPago\": \"EFECTIVO\"\n  }\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 5\n    },\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 1\n    }\n  ],\n  \"pago\": {\n    \"monto\": 1000,\n    \"metodoPago\": \"EFECTIVO\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3678,13 +3528,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido2}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido2}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido2}}",
                 "entregar"
               ]
@@ -3707,7 +3557,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Total 5x1200 + 3000 = 9000\", () => pm.expect(Number(j.pedido.total)).to.eql(9000));",
+                  "pm.test(\"Total 5x1200 + 3000 = 9000\", () => pm.expect(Number(j.visita.total)).to.eql(9000));",
                   "pm.test(\"$1800 a $1200 = 1,5 sifones pagados\", () => pm.expect(Number(j.pago.cantidad)).to.eql(1.5));"
                 ]
               }
@@ -3874,7 +3724,7 @@
           ]
         },
         {
-          "name": "PP24 Pedido con más bidones que el stock",
+          "name": "PP24 Visita del domingo 20 (Pedro)",
           "request": {
             "method": "POST",
             "header": [
@@ -3884,18 +3734,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-20\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 10\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2099-12-20\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3911,28 +3762,46 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.collectionVariables.set(\"idPedido3\", j.idPedido);"
+                  "const mia = j.find(v => v.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Se generó la visita, sin cantidades\", () => { pm.expect(mia).to.exist; pm.expect(mia.detalles.length).to.eql(0); });",
+                  "pm.collectionVariables.set(\"idPedido3\", mia.idVisita);",
+                  "// Borra las visitas generadas para otros clientes (para no ensuciar la base)",
+                  "j.filter(v => v.idVisita && v.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "PP25 Entregar sin stock suficiente",
+          "name": "PP25 Entregar 10 bidones sin stock suficiente",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido3}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido3}}",
                 "entregar"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idBidonP}},\n      \"cantidad\": 10\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
           "event": [
@@ -3955,13 +3824,13 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}/ausente",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido3}}/ausente",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido3}}",
                 "ausente"
               ]
@@ -3982,18 +3851,18 @@
           ]
         },
         {
-          "name": "PP27 No se puede borrar un pedido ausente",
+          "name": "PP27 No se puede borrar un visita ausente",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido3}}",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido3}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido3}}"
               ]
             }
@@ -4075,18 +3944,18 @@
           ]
         },
         {
-          "name": "PP30 Historial de pedidos del cliente",
+          "name": "PP30 Historial de visitas del cliente",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/cliente/{{idClienteP}}",
+              "raw": "{{baseUrl}}/api/visitas/cliente/{{idClienteP}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "cliente",
                 "{{idClienteP}}"
               ]
@@ -4100,7 +3969,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Tiene 3 pedidos\", () => pm.expect(j.length).to.eql(3));"
+                  "pm.test(\"Tiene 3 visitas\", () => pm.expect(j.length).to.eql(3));"
                 ]
               }
             }
@@ -4112,13 +3981,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas"
               ]
             }
           },
@@ -4135,18 +4004,18 @@
           ]
         },
         {
-          "name": "PP32 Entregar pedido inexistente",
+          "name": "PP32 Entregar visita inexistente",
           "request": {
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/999999/entregar",
+              "raw": "{{baseUrl}}/api/visitas/999999/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "999999",
                 "entregar"
               ]
@@ -4258,9 +4127,9 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "const p1 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
-                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
-                  "const b2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idBidonP\")));",
+                  "const p1 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p2 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const b2 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idBidonP\")));",
                   "pm.test(\"Entrega 1 (3 sifones) IMPAGA\", () => { pm.expect(p1.estado).to.eql(\"IMPAGA\"); pm.expect(Number(p1.unidadesPendientes)).to.eql(3); });",
                   "pm.test(\"Entrega 2: el pago en la entrega (1,5) la cubre a ella -> PARCIAL, faltan 3,5\", () => { pm.expect(p2.estado).to.eql(\"PARCIAL\"); pm.expect(Number(p2.unidadesCubiertas)).to.eql(1.5); pm.expect(Number(p2.unidadesPendientes)).to.eql(3.5); });",
                   "pm.test(\"Bidón IMPAGO\", () => pm.expect(b2.estado).to.eql(\"IMPAGA\"));",
@@ -4340,7 +4209,7 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.test(\"No está vinculado a una entrega\", () => pm.expect(j.idPedido).to.be.null);",
+                  "pm.test(\"No está vinculado a una entrega\", () => pm.expect(j.idVisita).to.be.null);",
                   "pm.test(\"3 sifones\", () => pm.expect(Number(j.cantidad)).to.eql(3));"
                 ]
               }
@@ -4373,8 +4242,8 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "const p1 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
-                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p1 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido1\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p2 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
                   "pm.test(\"Entrega 1 PAGADA\", () => pm.expect(p1.estado).to.eql(\"PAGADA\"));",
                   "pm.test(\"Entrega 2 sigue PARCIAL (3,5)\", () => { pm.expect(p2.estado).to.eql(\"PARCIAL\"); pm.expect(Number(p2.unidadesPendientes)).to.eql(3.5); });",
                   "pm.test(\"Total 3,5 x 1500 + 3000 = 8250\", () => pm.expect(Number(j.totalEnPesos)).to.eql(8250));"
@@ -4451,7 +4320,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "const p2 = j.entregas.find(e => e.idPedido === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
+                  "const p2 = j.entregas.find(e => e.idVisita === Number(pm.collectionVariables.get(\"idPedido2\")) && e.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
                   "const sif = j.resumen.find(r => r.idProducto === Number(pm.collectionVariables.get(\"idSifonP\")));",
                   "pm.test(\"Entrega 2 PAGADA\", () => pm.expect(p2.estado).to.eql(\"PAGADA\"));",
                   "pm.test(\"Sifón: -0,5 (saldo a favor) = -$750\", () => { pm.expect(Number(sif.unidadesAdeudadas)).to.eql(-0.5); pm.expect(Number(sif.deudaEnPesos)).to.eql(-750); });",
@@ -4489,14 +4358,14 @@
                   "const j = pm.response.json();",
                   "pm.test(\"6 sifones en casa (3 + 6 entregados - 3 vacíos)\", () => pm.expect(j.cliente.sifonesEnCasa).to.eql(6));",
                   "pm.test(\"Estado de cuenta con 3 entregas, $2250\", () => { pm.expect(Number(j.estadoCuenta.totalEnPesos)).to.eql(2250); pm.expect(j.estadoCuenta.entregas.length).to.eql(3); });",
-                  "pm.test(\"Sin visitas pendientes\", () => pm.expect(j.pedidosPendientes.length).to.eql(0));"
+                  "pm.test(\"Sin visitas pendientes\", () => pm.expect(j.visitasPendientes.length).to.eql(0));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Q08 Pedido de 2 sifones",
+          "name": "Q08 Visita del domingo 27 (Pedro)",
           "request": {
             "method": "POST",
             "header": [
@@ -4506,18 +4375,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-27\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2099-12-27\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4533,14 +4403,18 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.collectionVariables.set(\"idPedido4\", j.idPedido);"
+                  "const mia = j.find(v => v.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Se generó la visita, sin cantidades\", () => { pm.expect(mia).to.exist; pm.expect(mia.detalles.length).to.eql(0); });",
+                  "pm.collectionVariables.set(\"idPedido4\", mia.idVisita);",
+                  "// Borra las visitas generadas para otros clientes (para no ensuciar la base)",
+                  "j.filter(v => v.idVisita && v.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Q09 Entrega sin retirar vacíos (el cliente suma 2 sifones)",
+          "name": "Q09 Le dejo 2 y no retiro vacíos (el cliente suma 2)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -4550,20 +4424,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido4}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido4}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido4}}",
                 "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vaciosRetirados\": 0\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 2\n    }\n  ],\n  \"vaciosRetirados\": 0\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4579,7 +4453,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"vaciosRetirados 0\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(0));"
+                  "pm.test(\"vaciosRetirados 0\", () => pm.expect(j.visita.vaciosRetirados).to.eql(0));"
                 ]
               }
             }
@@ -4617,7 +4491,7 @@
           ]
         },
         {
-          "name": "Q11 Pedido de 1 sifón",
+          "name": "Q11 Visita del domingo 3/1 (Pedro)",
           "request": {
             "method": "POST",
             "header": [
@@ -4627,18 +4501,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-29\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2100-01-03\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4654,14 +4529,18 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.collectionVariables.set(\"idPedido5\", j.idPedido);"
+                  "const mia = j.find(v => v.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Se generó la visita, sin cantidades\", () => { pm.expect(mia).to.exist; pm.expect(mia.detalles.length).to.eql(0); });",
+                  "pm.collectionVariables.set(\"idPedido5\", mia.idVisita);",
+                  "// Borra las visitas generadas para otros clientes (para no ensuciar la base)",
+                  "j.filter(v => v.idVisita && v.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Q12 Entrega 1 lleno y retira 4 vacíos",
+          "name": "Q12 Le dejo 1 y retiro 4 vacíos",
           "request": {
             "method": "PATCH",
             "header": [
@@ -4671,20 +4550,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido5}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido5}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido5}}",
                 "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vaciosRetirados\": 4\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ],\n  \"vaciosRetirados\": 4\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4736,7 +4615,7 @@
           ]
         },
         {
-          "name": "Q14 Otro pedido de 1 sifón",
+          "name": "Q14 Visita del domingo 10/1 (Pedro)",
           "request": {
             "method": "POST",
             "header": [
@@ -4746,18 +4625,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-30\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2100-01-10\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4773,7 +4653,11 @@
                 "exec": [
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.collectionVariables.set(\"idPedido6\", j.idPedido);"
+                  "const mia = j.find(v => v.idCliente === Number(pm.collectionVariables.get(\"idClienteP\")));",
+                  "pm.test(\"Se generó la visita, sin cantidades\", () => { pm.expect(mia).to.exist; pm.expect(mia.detalles.length).to.eql(0); });",
+                  "pm.collectionVariables.set(\"idPedido6\", mia.idVisita);",
+                  "// Borra las visitas generadas para otros clientes (para no ensuciar la base)",
+                  "j.filter(v => v.idVisita && v.idCliente !== Number(pm.collectionVariables.get(\"idClienteP\"))).forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -4790,20 +4674,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido6}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido6}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido6}}",
                 "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vaciosRetirados\": 10\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ],\n  \"vaciosRetirados\": 10\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5081,18 +4965,18 @@
           ]
         },
         {
-          "name": "Q22 Generar pedidos de hoy sin mandar fecha (HU-08)",
+          "name": "Q22 Generar visitas de hoy sin mandar fecha (HU-08)",
           "request": {
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             }
@@ -5106,8 +4990,8 @@
                   "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "pm.test(\"Devuelve una lista\", () => pm.expect(j).to.be.an(\"array\"));",
-                  "// Borra lo generado para no ensuciar la base con pedidos de clientes reales",
-                  "j.forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + p.idPedido, method: \"DELETE\" }));"
+                  "// Borra lo generado para no ensuciar la base con visitas de clientes reales",
+                  "j.forEach(p => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + p.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -5195,18 +5079,18 @@
           ]
         },
         {
-          "name": "Q25 Borrar el pedido pendiente",
+          "name": "Q25 Borrar el visita pendiente",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{idPedido6}}",
+              "raw": "{{baseUrl}}/api/visitas/{{idPedido6}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{idPedido6}}"
               ]
             }
@@ -5285,7 +5169,7 @@
           ]
         },
         {
-          "name": "Q28 No se le pueden crear pedidos",
+          "name": "Q28 Dado de baja: no se le genera visita",
           "request": {
             "method": "POST",
             "header": [
@@ -5295,18 +5179,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "generar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{idClienteP}},\n  \"fechaEntrega\": \"2099-12-31\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{idSifonP}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"fecha\": \"2100-01-17\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5320,9 +5205,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Avisa que está dado de baja\", () => pm.expect(j.mensaje).to.include(\"dado de baja\"));"
+                  "pm.test(\"Pedro no está\", () => pm.expect(j.map(v => v.idCliente)).to.not.include(Number(pm.collectionVariables.get(\"idClienteP\"))));",
+                  "// Borra lo generado para otros clientes",
+                  "j.forEach(v => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + v.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -5660,11 +5547,11 @@
                   "pm.test(\"Recorrido ABIERTO con stock inicial 10\", () => { pm.expect(j.estado).to.eql(\"ABIERTO\"); pm.expect(j.stockInicial).to.eql(10); pm.expect(j.fechaCierre).to.be.null; });",
                   "const v = j.visitas.filter(x => mios.includes(x.idCliente));",
                   "pm.test(\"Generó las 3 visitas, PENDIENTES\", () => { pm.expect(v.length).to.eql(3); v.forEach(x => pm.expect(x.estado).to.eql(\"PENDIENTE\")); });",
-                  "pm.collectionVariables.set(\"rPedX\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rX\"))).idPedido);",
-                  "pm.collectionVariables.set(\"rPedY\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rY\"))).idPedido);",
-                  "pm.collectionVariables.set(\"rPedZ\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rZ\"))).idPedido);",
+                  "pm.collectionVariables.set(\"rPedX\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rX\"))).idVisita);",
+                  "pm.collectionVariables.set(\"rPedY\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rY\"))).idVisita);",
+                  "pm.collectionVariables.set(\"rPedZ\", v.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rZ\"))).idVisita);",
                   "// Borra las visitas de clientes que no son de esta prueba",
-                  "j.visitas.filter(x => !mios.includes(x.idCliente)).forEach(x => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/pedidos/\" + x.idPedido, method: \"DELETE\" }));"
+                  "j.visitas.filter(x => !mios.includes(x.idCliente)).forEach(x => pm.sendRequest({ url: pm.collectionVariables.get(\"baseUrl\") + \"/api/visitas/\" + x.idVisita, method: \"DELETE\" }));"
                 ]
               }
             }
@@ -5755,13 +5642,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{rPedX}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{rPedX}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{rPedX}}",
                 "entregar"
               ]
@@ -5799,13 +5686,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/{{rPedY}}/entregar",
+              "raw": "{{baseUrl}}/api/visitas/{{rPedY}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "{{rPedY}}",
                 "entregar"
               ]
@@ -5828,7 +5715,7 @@
                 "exec": [
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
-                  "pm.test(\"Se llevó sus 2 vacíos (no 4)\", () => pm.expect(j.pedido.vaciosRetirados).to.eql(2));"
+                  "pm.test(\"Se llevó sus 2 vacíos (no 4)\", () => pm.expect(j.visita.vaciosRetirados).to.eql(2));"
                 ]
               }
             }
@@ -5891,7 +5778,7 @@
                   "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
                   "pm.test(\"Sigue ABIERTO\", () => pm.expect(j.estado).to.eql(\"ABIERTO\"));",
-                  "pm.test(\"2 entregados, 1 pendiente\", () => { pm.expect(j.entregados).to.eql(2); pm.expect(j.pendientes).to.eql(1); pm.expect(j.ausentes).to.eql(0); });",
+                  "pm.test(\"2 entregados, 1 pendiente\", () => { pm.expect(j.entregadas).to.eql(2); pm.expect(j.pendientes).to.eql(1); pm.expect(j.ausentes).to.eql(0); });",
                   "pm.test(\"7 sifones entregados, 5 vacíos, quedan 3 en el camión\", () => { pm.expect(j.sifonesEntregados).to.eql(7); pm.expect(j.vaciosRetirados).to.eql(5); pm.expect(j.stockRestante).to.eql(3); });",
                   "pm.test(\"Vendido $7000, cobrado $1500 en efectivo, saldo $5500\", () => { pm.expect(Number(j.totalVendido)).to.eql(7000); pm.expect(Number(j.cobradoEfectivo)).to.eql(1500); pm.expect(Number(j.totalCobrado)).to.eql(1500); pm.expect(Number(j.saldoDelDia)).to.eql(5500); });",
                   "pm.test(\"La visita de Xavier muestra lo cobrado\", () => pm.expect(Number(j.visitas.find(x => x.idCliente === Number(pm.collectionVariables.get(\"rX\"))).cobrado)).to.eql(1500));"
@@ -6020,13 +5907,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos/generar",
+              "raw": "{{baseUrl}}/api/visitas/generar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos",
+                "visitas",
                 "generar"
               ]
             },
@@ -6055,9 +5942,9 @@
           ]
         },
         {
-          "name": "R16 Día cerrado: no se pueden cargar pedidos",
+          "name": "R16 Día cerrado: no se puede tocar una entrega",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
@@ -6065,18 +5952,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pedidos",
+              "raw": "{{baseUrl}}/api/visitas/{{rPedX}}/entregar",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "pedidos"
+                "visitas",
+                "{{rPedX}}",
+                "entregar"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idCliente\": {{rX}},\n  \"fechaEntrega\": \"2097-06-02\",\n  \"detalles\": [\n    {\n      \"idProducto\": {{rProd}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"detalles\": [\n    {\n      \"idProducto\": {{rProd}},\n      \"cantidad\": 1\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -14,7 +14,7 @@ public class PagoMapper {
                 pago.getCliente().getNombre() + " " + pago.getCliente().getApellido(),
                 pago.getProducto().getIdProducto(),
                 pago.getProducto().getNombre(),
-                pago.getPedido() != null ? pago.getPedido().getIdPedido() : null,
+                pago.getVisita() != null ? pago.getVisita().getIdVisita() : null,
                 pago.getFechaPago(),
                 pago.getMonto(),
                 pago.getCantidad(),

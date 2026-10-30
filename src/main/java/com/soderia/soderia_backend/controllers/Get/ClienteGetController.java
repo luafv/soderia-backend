@@ -3,6 +3,7 @@ package com.soderia.soderia_backend.controllers.Get;
 import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.DayOfWeek;
 import java.util.List;
 
+@Tag(name = "Clientes", description = "Alta, búsqueda, envases en casa y baja lógica")
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
