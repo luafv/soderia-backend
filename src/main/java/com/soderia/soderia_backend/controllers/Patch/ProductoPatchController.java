@@ -16,21 +16,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Productos", description = "Catálogo, precio y stock del camión")
 @RestController
-@RequestMapping("/api/productos")
+@RequestMapping("/api/productos/{id}")
 @RequiredArgsConstructor
 public class ProductoPatchController {
 
     private final ProductoService productoService;
 
     // Actualiza solo el precio (ej: aumento del sifón)
-    @PatchMapping("/{id}/precio")
+    @PatchMapping("/precio")
     public ResponseEntity<ProductoResponse> actualizarPrecio(@PathVariable Long id,
                                                              @Valid @RequestBody PrecioRequest request) {
         return ResponseEntity.ok(productoService.actualizarPrecio(id, request));
     }
 
     // HU-07: carga del stock del día (sifones llenos en el transporte)
-    @PatchMapping("/{id}/stock")
+    @PatchMapping("/stock")
     public ResponseEntity<ProductoResponse> actualizarStock(@PathVariable Long id,
                                                             @Valid @RequestBody StockRequest request) {
         return ResponseEntity.ok(productoService.actualizarStock(id, request));
