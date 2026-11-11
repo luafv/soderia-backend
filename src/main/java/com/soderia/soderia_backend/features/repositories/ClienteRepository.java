@@ -1,19 +1,17 @@
 package com.soderia.soderia_backend.features.repositories;
 
 import com.soderia.soderia_backend.features.models.Cliente;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
-@Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     // Clientes activos a visitar en un día de reparto (para armar el recorrido)
-    List<Cliente> findByDiaEntregaAndActivoTrueOrderByDireccionAsc(DayOfWeek diaEntrega);
+    List<Cliente> findByDiaEntregaAndActivoTrueOrderByDireccionAsc(DiaSemana diaEntrega);
 
     // Búsqueda con filtros opcionales: texto vacío = sin filtro
     // - buscar: nombre o apellido

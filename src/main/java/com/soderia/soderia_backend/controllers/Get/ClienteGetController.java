@@ -2,6 +2,7 @@ package com.soderia.soderia_backend.controllers.Get;
 
 import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.DayOfWeek;
+
 import java.util.List;
 
 @Tag(name = "Clientes", description = "Alta, búsqueda, envases en casa y baja lógica")
@@ -49,7 +50,7 @@ public class ClienteGetController {
 
     // GET /api/clientes/dia/TUESDAY -> recorrido del martes (solo clientes activos)
     @GetMapping("/dia/{dia}")
-    public ResponseEntity<List<ClienteResponse>> listarPorDia(@PathVariable DayOfWeek dia) {
+    public ResponseEntity<List<ClienteResponse>> listarPorDia(@PathVariable DiaSemana dia) {
         return ResponseEntity.ok(clienteService.listarPorDia(dia));
     }
 }
