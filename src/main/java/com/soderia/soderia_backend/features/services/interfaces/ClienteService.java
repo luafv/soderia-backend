@@ -4,8 +4,8 @@ import com.soderia.soderia_backend.features.dtos.request.ClienteRequest;
 import com.soderia.soderia_backend.features.dtos.request.SifonesRequest;
 import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
 public interface ClienteService {
@@ -16,7 +16,7 @@ public interface ClienteService {
 
     ClienteDetalleResponse detalle(Long id);
 
-    List<ClienteResponse> listarPorDia(DayOfWeek dia);
+    List<ClienteResponse> listarPorDia(DiaSemana dia);
 
     ClienteResponse crear(ClienteRequest request);
 

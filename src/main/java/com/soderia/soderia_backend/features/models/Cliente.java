@@ -7,7 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.DayOfWeek;
+
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 
 @Entity
 @Table(name = "clientes")
@@ -39,10 +40,10 @@ public class Cliente {
     @Column(length = 30)
     private String telefono;
 
-    // Día fijo de reparto (MONDAY..SUNDAY)
+    //Día fijo de reparto (LUNES..DOMINGO)
     @Enumerated(EnumType.STRING)
     @Column(name = "dia_entrega", length = 10)
-    private DayOfWeek diaEntrega;
+    private DiaSemana diaEntrega;
 
     // Envases de la sodería que tiene el cliente en su casa (llenos + vacíos)
     @Column(name = "sifones_en_casa", columnDefinition = "integer default 0 not null")

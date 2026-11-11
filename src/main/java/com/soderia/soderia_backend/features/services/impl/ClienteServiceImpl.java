@@ -10,6 +10,7 @@ import com.soderia.soderia_backend.features.mappers.ClienteMapper;
 import com.soderia.soderia_backend.features.mappers.VisitaMapper;
 import com.soderia.soderia_backend.features.models.Cliente;
 import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
 import com.soderia.soderia_backend.features.repositories.VisitaRepository;
 import com.soderia.soderia_backend.features.services.interfaces.ClienteService;
@@ -18,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
 @Service
@@ -63,9 +63,10 @@ public class ClienteServiceImpl implements ClienteService {
         );
     }
 
+    // Lista los clientes activos que tienen asignado un determinado día de entrega
     @Override
     @Transactional(readOnly = true)
-    public List<ClienteResponse> listarPorDia(DayOfWeek dia) {
+    public List<ClienteResponse> listarPorDia(DiaSemana dia) {
         return clienteRepository.findByDiaEntregaAndActivoTrueOrderByDireccionAsc(dia).stream()
                 .map(clienteMapper::toResponse)
                 .toList();

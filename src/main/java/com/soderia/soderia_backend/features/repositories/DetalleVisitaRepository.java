@@ -5,11 +5,11 @@ import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+
 
 import java.util.List;
 
-@Repository
+
 public interface DetalleVisitaRepository extends JpaRepository<DetalleVisita, Long> {
 
     // Renglones de las visitas de un cliente en un estado, del más viejo al más nuevo

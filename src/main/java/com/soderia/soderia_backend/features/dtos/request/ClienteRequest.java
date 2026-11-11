@@ -1,12 +1,13 @@
 package com.soderia.soderia_backend.features.dtos.request;
 
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
-import java.time.DayOfWeek;
 
 // Datos para crear o actualizar un cliente
 public record ClienteRequest(
@@ -33,7 +34,7 @@ public record ClienteRequest(
         String telefono,
 
         // Opcional. Valores: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-        DayOfWeek diaEntrega,
+        DiaSemana diaEntrega,
 
         // Opcional. Envases que tiene el cliente en su casa (al crear: 0 si no se manda; al modificar: no cambia)
         @PositiveOrZero(message = "Los sifones en casa no pueden ser negativos")

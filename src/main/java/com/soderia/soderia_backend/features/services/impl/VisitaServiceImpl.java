@@ -16,6 +16,7 @@ import com.soderia.soderia_backend.features.models.DetalleVisita;
 import com.soderia.soderia_backend.features.models.Visita;
 import com.soderia.soderia_backend.features.models.Producto;
 import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 import com.soderia.soderia_backend.features.models.enums.EstadoRecorrido;
 import com.soderia.soderia_backend.features.repositories.ClienteRepository;
 import com.soderia.soderia_backend.features.repositories.VisitaRepository;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,16 +78,20 @@ public class VisitaServiceImpl implements VisitaService {
     @Override
     public List<VisitaResponse> generarVisitasDelDia(GenerarVisitasRequest request) {
         // HU-08: si no se manda fecha, se generan las de hoy
-        LocalDate fecha = (request == null || request.fecha() == null) ? LocalDate.now() : request.fecha();
+        LocalDate fecha = (request == null || request.fecha() == null)
+                ? LocalDate.now(ZoneId.of("America/Argentina/Buenos_Aires"))
+                : request.fecha();
         validarDiaAbierto(fecha);
         List<VisitaResponse> creadas = new ArrayList<>();
 
-        for (Cliente cliente : clienteRepository.findByDiaEntregaAndActivoTrueOrderByDireccionAsc(fecha.getDayOfWeek())) {
+        DiaSemana dia = convertirDia(fecha);
+        for (Cliente cliente : clienteRepository.findByDiaEntregaAndActivoTrueOrderByDireccionAsc(dia)) {
             // Si ya tiene visita ese día, no se duplica
             if (visitaRepository.existsByClienteIdClienteAndFecha(cliente.getIdCliente(), fecha)) {
                 continue;
             }
-            // Visita pendiente SIN cantidades: lo que se deja se registra recién en la casa del cliente.
+            // Visita pendiente SIN cantidades: lo que se deja se registra recién en la casa
+            // del cliente.
             // La respuesta trae un "sugerido" = los envases que el cliente tiene en casa.
             Visita visita = Visita.builder()
                     .cliente(cliente)
@@ -96,6 +102,19 @@ public class VisitaServiceImpl implements VisitaService {
         return creadas;
     }
 
+    // Convierte el dia obtenido de LocalDate al enum DiaSemana, reemplazando los valores a español
+    private DiaSemana convertirDia(LocalDate fecha) {
+        return switch (fecha.getDayOfWeek()) {
+            case MONDAY -> DiaSemana.LUNES;
+            case TUESDAY -> DiaSemana.MARTES;
+            case WEDNESDAY -> DiaSemana.MIERCOLES;
+            case THURSDAY -> DiaSemana.JUEVES;
+            case FRIDAY -> DiaSemana.VIERNES;
+            case SATURDAY -> DiaSemana.SABADO;
+            case SUNDAY -> DiaSemana.DOMINGO;
+        };
+    }
+
     // ===================== Entrega =====================
 
     @Override
@@ -104,7 +123,8 @@ public class VisitaServiceImpl implements VisitaService {
         validarDiaAbierto(visita.getFecha());
         validarPendiente(visita, "entregar");
 
-        // 1. Lo que el repartidor dejó en la casa. Si lo informa, reemplaza lo que tuviera la visita.
+        // 1. Lo que el repartidor dejó en la casa. Si lo informa, reemplaza lo que
+        // tuviera la visita.
         if (request != null && request.detalles() != null && !request.detalles().isEmpty()) {
             cargarDetalles(visita, request.detalles());
         }
@@ -124,9 +144,11 @@ public class VisitaServiceImpl implements VisitaService {
             }
         }
 
-        // 3. HU-09: envases en casa del cliente = antes + llenos que deja - vacíos que se lleva.
-        //    Si no se informan los vacíos, se asume el cambio: se lleva tantos vacíos como llenos deja,
-        //    pero nunca más de los envases que tenía el cliente.
+        // 3. HU-09: envases en casa del cliente = antes + llenos que deja - vacíos que
+        // se lleva.
+        // Si no se informan los vacíos, se asume el cambio: se lleva tantos vacíos como
+        // llenos deja,
+        // pero nunca más de los envases que tenía el cliente.
         Cliente cliente = visita.getCliente();
         int llenos = visita.getDetalles().stream().mapToInt(DetalleVisita::getCantidad).sum();
         int vacios = (request != null && request.vaciosRetirados() != null)
@@ -191,7 +213,8 @@ public class VisitaServiceImpl implements VisitaService {
             }
         }
 
-        // Si se carga de nuevo, se reemplazan los renglones anteriores (orphanRemoval los borra de la base)
+        // Si se carga de nuevo, se reemplazan los renglones anteriores (orphanRemoval
+        // los borra de la base)
         visita.getDetalles().clear();
 
         for (DetalleVisitaRequest d : detalles) {
@@ -220,7 +243,8 @@ public class VisitaServiceImpl implements VisitaService {
         recorridoRepository.findByFecha(fecha)
                 .filter(r -> r.getEstado() == EstadoRecorrido.CERRADO)
                 .ifPresent(r -> {
-                    throw new ConflictoException("El recorrido del " + fecha + " está cerrado. Solo el admin puede reabrirlo");
+                    throw new ConflictoException(
+                            "El recorrido del " + fecha + " está cerrado. Solo el admin puede reabrirlo");
                 });
     }
 

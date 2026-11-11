@@ -3,12 +3,10 @@ package com.soderia.soderia_backend.features.repositories;
 import com.soderia.soderia_backend.features.models.Visita;
 import com.soderia.soderia_backend.features.models.enums.EstadoVisita;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Repository
 public interface VisitaRepository extends JpaRepository<Visita, Long> {
 
     List<Visita> findByClienteIdClienteOrderByFechaDesc(Long idCliente);

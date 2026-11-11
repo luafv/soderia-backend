@@ -1,6 +1,6 @@
 package com.soderia.soderia_backend.features.dtos.response;
 
-import java.time.DayOfWeek;
+import com.soderia.soderia_backend.features.models.enums.DiaSemana;
 
 public record ClienteResponse(
         Long idCliente,
@@ -9,7 +9,7 @@ public record ClienteResponse(
         String direccion,
         String email,
         String telefono,
-        DayOfWeek diaEntrega,
+        DiaSemana diaEntrega,
         Integer sifonesEnCasa,
         Boolean activo
 ) {
