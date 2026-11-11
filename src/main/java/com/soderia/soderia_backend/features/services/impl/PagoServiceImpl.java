@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -52,7 +53,7 @@ public class PagoServiceImpl implements PagoService {
         Cliente cliente = obtenerCliente(request.idCliente());
         Producto producto = productoRepository.findById(request.idProducto())
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el producto con id " + request.idProducto()));
-        LocalDate fecha = request.fechaPago() != null ? request.fechaPago() : LocalDate.now();
+        LocalDate fecha = request.fechaPago() != null ? request.fechaPago() : LocalDate.now(ZoneId.of("America/Argentina/Buenos_Aires"));
         return registrarPago(cliente, producto, request.monto(), request.metodoPago(), fecha, null);
     }
 
@@ -202,7 +203,7 @@ public class PagoServiceImpl implements PagoService {
                 cliente.getIdCliente(),
                 cliente.getNombre() + " " + cliente.getApellido(),
                 cliente.getTelefono(),
-                LocalDate.now(),
+                LocalDate.now(ZoneId.of("America/Argentina/Buenos_Aires")),
                 detalleEntregas,
                 resumen,
                 total

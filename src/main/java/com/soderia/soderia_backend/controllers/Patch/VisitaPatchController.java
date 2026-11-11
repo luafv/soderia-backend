@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Visitas y entregas", description = "Visitas del día, entregas y ausentes")
 @RestController
-@RequestMapping("/api/visitas")
+@RequestMapping("/api/visitas/{id}")
 @RequiredArgsConstructor
 public class VisitaPatchController {
 
@@ -24,13 +24,13 @@ public class VisitaPatchController {
 
     // Marca la visita como ENTREGADA, descuenta stock y opcionalmente registra el cobro.
     // El body es opcional.
-    @PatchMapping("/{id}/entregar")
+    @PatchMapping("/entregar")
     public ResponseEntity<EntregaResponse> entregar(@PathVariable Long id,
                                                     @Valid @RequestBody(required = false) EntregaRequest request) {
         return ResponseEntity.ok(visitaService.entregar(id, request));
     }
 
-    @PatchMapping("/{id}/ausente")
+    @PatchMapping("/ausente")
     public ResponseEntity<VisitaResponse> marcarAusente(@PathVariable Long id) {
         return ResponseEntity.ok(visitaService.marcarAusente(id));
     }

@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -48,7 +49,7 @@ public class RecorridoServiceImpl implements RecorridoService {
 
     @Override
     public ReporteRecorridoResponse iniciar(IniciarRecorridoRequest request) {
-        LocalDate fecha = request.fecha() != null ? request.fecha() : LocalDate.now();
+        LocalDate fecha = request.fecha() != null ? request.fecha() : LocalDate.now(ZoneId.of("America/Argentina/Buenos_Aires"));
         if (recorridoRepository.existsByFecha(fecha)) {
             throw new ConflictoException("Ya hay un recorrido para el " + fecha);
         }
@@ -58,13 +59,13 @@ public class RecorridoServiceImpl implements RecorridoService {
         // 1. Stock del camión (HU-07)
         producto.setStock(request.stock());
 
-        // 2. Se abre el día
+        // 2. Se abre el día y se registra la hora de inicio en horario de Argentina (UTC-3)
         Recorrido recorrido = recorridoRepository.save(Recorrido.builder()
                 .fecha(fecha)
                 .producto(producto)
                 .stockInicial(request.stock())
                 .estado(EstadoRecorrido.ABIERTO)
-                .fechaInicio(LocalDateTime.now())
+                .fechaInicio(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))
                 .build());
 
         // 3. Visitas del día para los clientes activos de ese día (HU-08)
@@ -86,7 +87,8 @@ public class RecorridoServiceImpl implements RecorridoService {
         }
 
         recorrido.setEstado(EstadoRecorrido.CERRADO);
-        recorrido.setFechaCierre(LocalDateTime.now());
+        // Se registra la hora de cierre en horario de Argentina (UTC-3)
+        recorrido.setFechaCierre(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")));
         return armarReporte(recorrido);
     }
 

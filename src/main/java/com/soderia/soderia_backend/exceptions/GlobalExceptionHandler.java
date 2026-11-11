@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -74,7 +75,8 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorResponse> construir(HttpStatus status, String mensaje, Map<String, String> errores) {
         ErrorResponse body = new ErrorResponse(
-                LocalDateTime.now(),
+            // Registra el momento del error según el horario argentino (ART, UTC-3).
+                LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")),
                 status.value(),
                 status.getReasonPhrase(),
                 mensaje,

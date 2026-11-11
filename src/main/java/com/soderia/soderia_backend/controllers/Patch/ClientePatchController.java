@@ -15,21 +15,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Clientes", description = "Alta, búsqueda, envases en casa y baja lógica")
 @RestController
-@RequestMapping("/api/clientes")
+@RequestMapping("/api/clientes/{id}")
 @RequiredArgsConstructor
 public class ClientePatchController {
 
     private final ClienteService clienteService;
 
     // Corrección manual de los envases que tiene el cliente en su casa
-    @PatchMapping("/{id}/sifones")
+    @PatchMapping("/sifones")
     public ResponseEntity<ClienteResponse> actualizarSifones(@PathVariable Long id,
                                                              @Valid @RequestBody SifonesRequest request) {
         return ResponseEntity.ok(clienteService.actualizarSifones(id, request));
     }
 
     // Vuelve a dar de alta un cliente dado de baja
-    @PatchMapping("/{id}/reactivar")
+    @PatchMapping("/reactivar")
     public ResponseEntity<ClienteResponse> reactivar(@PathVariable Long id) {
         return ResponseEntity.ok(clienteService.reactivar(id));
     }
