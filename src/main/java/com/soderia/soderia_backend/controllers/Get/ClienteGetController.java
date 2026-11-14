@@ -1,5 +1,6 @@
 package com.soderia.soderia_backend.controllers.Get;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.soderia.soderia_backend.features.dtos.response.ClienteDetalleResponse;
 import com.soderia.soderia_backend.features.dtos.response.ClienteResponse;
 import com.soderia.soderia_backend.features.models.enums.DiaSemana;
@@ -12,14 +13,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @Tag(name = "Clientes", description = "Alta, búsqueda, envases en casa y baja lógica")
+@SecurityRequirement(name = "bearerAuth") //Asi Swagger sabe que los endpoints de clientes necesitan el token.
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'REPARTIDOR')")
 public class ClienteGetController {
 
     private final ClienteService clienteService;

@@ -4,11 +4,13 @@ import com.soderia.soderia_backend.features.dtos.request.IniciarRecorridoRequest
 import com.soderia.soderia_backend.features.dtos.response.ReporteRecorridoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.RecorridoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,8 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/recorridos")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'REPARTIDOR')")
+@SecurityRequirement(name = "bearerAuth") //Asi Swagger sabe que los endpoints de clientes necesitan el token.
 public class RecorridoPostController {
 
     private final RecorridoService recorridoService;

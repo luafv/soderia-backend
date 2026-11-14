@@ -4,9 +4,12 @@ import com.soderia.soderia_backend.features.dtos.response.DeudaResponse;
 import com.soderia.soderia_backend.features.dtos.response.EstadoCuentaResponse;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +21,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'REPARTIDOR')")
+@SecurityRequirement(name = "bearerAuth") //Asi Swagger sabe que los endpoints de clientes necesitan el token.
 public class PagoGetController {
 
     private final PagoService pagoService;
