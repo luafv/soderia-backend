@@ -4,9 +4,11 @@ import com.soderia.soderia_backend.features.dtos.request.PagoRequest;
 import com.soderia.soderia_backend.features.dtos.response.PagoResponse;
 import com.soderia.soderia_backend.features.services.interfaces.PagoService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,8 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/pagos")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'REPARTIDOR')")
+@SecurityRequirement(name = "bearerAuth") //Asi Swagger sabe que los endpoints de clientes necesitan el token.
 public class PagoPostController {
 
     private final PagoService pagoService;

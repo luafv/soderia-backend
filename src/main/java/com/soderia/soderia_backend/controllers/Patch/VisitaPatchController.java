@@ -5,9 +5,11 @@ import com.soderia.soderia_backend.features.dtos.response.EntregaResponse;
 import com.soderia.soderia_backend.features.dtos.response.VisitaResponse;
 import com.soderia.soderia_backend.features.services.interfaces.VisitaService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/visitas/{id}")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'REPARTIDOR')")
+@SecurityRequirement(name = "bearerAuth") //Asi Swagger sabe que los endpoints de clientes necesitan el token.
 public class VisitaPatchController {
 
     private final VisitaService visitaService;
